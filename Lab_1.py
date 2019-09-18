@@ -170,14 +170,36 @@ class Rushhour:
     
     
     def solve(self, state):
-        visited = set()
-        fifo = deque([state])
-        visited.add(state)
+         visited = set()
+        fifo = deque()
+        fifo.append(state)
+        arbre = dict()
+
+        # visited.add(state)
+
+        while fifo:
+            s_temp = fifo.popleft() # premier élément retiré de la liste (first in first out)
+
+            if s_temp.success(): # Si success arreté la boucle
+
+                break
+
+            else:
+
+                if not (s_temp in visited):
+                    visited.add(s_temp)
+                    s_move = self.possible_moves(s_temp)
+
+
+                    for s in s_move:
+                        if not (s in visited):
+                            fifo.append(s)
+        return s_temp
         
-        # TODO
         
         
-        return None
+        
+        
     
                     
     def solve_Astar(self, state):
@@ -193,7 +215,35 @@ class Rushhour:
     
                     
     def print_solution(self, state):
-        # TODO
+        
+        pos = state.pos
+        s = State([1, 0, 3, 1, 1, 4, 3, 4, 4, 2, 4, 1])
+        d = 0
+        list_move = []
+
+        while not np.array_equal(pos, s.pos):  # For that sucessful state, get the car information, direction of movement
+                                
+            # print("Good")
+            if self.horiz[state.c]:
+                if state.d > 0:
+                    list_move.append('Voiture ' + str(state.c) + ' vers ' + 'la droite')
+                else:
+                    list_move.append('Voiture ' + str(state.c) + ' vers ' + 'la gauche')
+            else:
+                if state.d > 0:
+                    list_move.append('Voiture ' + str(state.c) + ' vers ' + 'le bas')
+                else:
+                    list_move.append('Voiture ' + str(state.c) + ' vers ' + 'le haut')
+
+            # rh.color[turn_state.prev.c]
+
+            state = state.prev  # From that successfull state, go back to the previous state to get the list of all movements
+            pos = state.pos
+
+            d = d + 1
+
+        list_move = list_move[::-1]
+        print(list_move)
         return 0
     
     
