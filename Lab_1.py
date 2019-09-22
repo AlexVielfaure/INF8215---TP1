@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Mon Sep  9 15:12:19 2019
 
@@ -119,6 +117,7 @@ def test1():
     
 test1()
 
+#%%
 class Rushhour:
     
     def __init__(self, horiz, length, move_on, color=None):
@@ -171,14 +170,31 @@ class Rushhour:
     
     def solve(self, state):
         visited = set()
-        fifo = deque([state])
-        visited.add(state)
+        fifo = deque()
+        fifo.append(state)
+
+        # visited.add(state)
+
+        while fifo:
+            s_temp = fifo.popleft() # premier élément retiré de la liste (first in first out)
+
+            if s_temp.success(): # Si success arreté la boucle
+
+                break
+
+            else:
+
+                if not (s_temp in visited):
+                    visited.add(s_temp)
+                    s_move = self.possible_moves(s_temp)
+
+
+                    for s in s_move:
+                        if not (s in visited):
+                            fifo.append(s)
+        return s_temp
         
-        # TODO
         
-        
-        return None
-    
                     
     def solve_Astar(self, state):
         visited = set()
@@ -193,10 +209,31 @@ class Rushhour:
     
                     
     def print_solution(self, state):
-        # TODO
+        
+        list_move = []
+        while not (state.c == None): # For that sucessful state, get the car information, direction of movement
+                                
+            if self.horiz[state.c]:
+                if state.d > 0:
+                    list_move.append('Voiture ' + str(self.color[state.c]) + ' vers ' + 'la droite')
+                else:
+                    list_move.append('Voiture ' + str(self.color[state.c]) + ' vers ' + 'la gauche')
+            else:
+                if state.d > 0:
+                    list_move.append('Voiture ' + str(self.color[state.c]) + ' vers ' + 'le bas')
+                else:
+                    list_move.append('Voiture ' + str(self.color[state.c]) + ' vers ' + 'le haut')
+
+            state = state.prev  # From that successfull state, go back to the previous state to get the list of all movements
+
+        list_move = list_move[::-1]
+        
+        for i in range(len(list_move)):
+            print(str(i+1)+".",list_move[i]+"\n")
+    
         return 0
     
-    
+#%%   
 def test2():
     rh = Rushhour([True, True, False, False, True, True, False, False],
                  [2, 2, 3, 2, 3, 2, 3, 3],
@@ -212,7 +249,7 @@ def test2():
             
 test2()
 
-
+#%%
 def test3():
     rh = Rushhour([True, False, True, False, False, True, False, True, False, True, False, True],
                  [2, 2, 3, 2, 3, 2, 2, 2, 2, 2, 2, 3],
@@ -224,78 +261,43 @@ def test3():
 
 test3()
 
+#%%
+def solve46():
+    rh = Rushhour([True, False, True, False, False, True, False, True, False, True, False, True],
+                 [2, 2, 3, 2, 3, 2, 2, 2, 2, 2, 2, 3],
+                 [2, 2, 0, 0, 3, 1, 1, 3, 0, 4, 5, 5],
+                 ["rouge", "vert clair", "jaune", "orange", "violet clair", "bleu ciel", "rose", "violet", "vert", "noir", "beige", "bleu"])
+    s = State([1, 0, 3, 1, 1, 4, 3, 4, 4, 2, 4, 1])
+    s = rh.solve(s)
+    #s = rh.solve_Astar(s)
+    rh.print_solution(s)
+
+solve46()
+
+#%%
+def solve16():
+    rh = Rushhour([True, True, False, False, True, True, False, False],
+                 [2, 2, 3, 2, 3, 2, 3, 3],
+                 [2, 0, 0, 0, 5, 4, 5, 3],
+                 ["rouge", "vert clair", "violet", "orange", "vert", "bleu ciel", "jaune", "bleu"])
+    s = State([1, 0, 1, 4, 2, 4, 0, 1])
+    s = rh.solve(s)
+    #s = rh.solve_Astar(s)
+    rh.print_solution(s)
+ 
+solve16()
+
+#%%
+def solve81():
+    rh = Rushhour([True, False, True, False, False, False, False, True, False, False, True, True, True],
+                 [2, 3, 2, 2, 2, 2, 3, 3, 2, 2, 2, 2, 2],
+                 [2, 0, 0, 4, 1, 2, 5, 3, 3, 2, 4, 5, 5],
+                 ["rouge", "jaune", "vert clair", "orange", "bleu clair", "rose", "violet clair","bleu", "violet", "vert", "noir", "beige", "jaune clair"])
+    s = State([3, 0, 1, 0, 1, 1, 1, 0, 3, 4, 4, 0, 3])
+    s = rh.solve(s)
+    #s = rh.solve_Astar(s)
+    rh.print_solution(s)
+
+solve81()
 
 
-
-
-
-#rh = Rushhour([True, False, False],
-#                 [2, 3, 2],
-#                 [2, 3, 4])
-#
-#state = State([1, 1, 1])
-    
-rh = Rushhour([True, True, False, False, True, True, False, False],
-             [2, 2, 3, 2, 3, 2, 3, 3],
-             [2, 0, 0, 0, 5, 4, 5, 3],
-             ["rouge", "vert clair", "violet", "orange", "vert", "bleu ciel", "jaune", "bleu"])
-state = State([1, 0, 1, 4, 2, 4, 0, 1])
-
-
-#%% Solve function 
-
-visited = set()
-fifo = deque([state])
-visited.add(state)
-
-n=0
-while (len(fifo) != 0) & (n < 100000000):
-    
-    if (fifo[0].success()): # Check if first item in list fifo is success, if yes break while loop
-        print('GG')
-        break
-    
-    else : 
-        #Check all possible new states
-        moves = rh.possible_moves(fifo[0]) #When not success, check all possible moves from the state in first item of fifo
-        
-        #Add unseen new states to fifo
-        for i in moves:
-            if not (i in visited): #For all possible moves from that state, check if they are in list visited 
-                fifo.append(i) #If not in list visited, add that new state to fifo (at the end)
-        
-        #remove state
-        visited.add(fifo.popleft()) #Add the first item of fifo to visited list and remove the first item (the one that generated all new states)
-        
-    n = n + 1 
-  
-
-turn_state = fifo[0] #When while loop was broken, fifo[0] was a successful state
-pos = turn_state.pos 
-d=0
-list_move = []
-
-while not np.array_equal(pos,state.pos): # For that sucessful state, get the car information, direction of movement 
-    
-    if rh.horiz[turn_state.c]:
-        if turn_state.d > 0:
-            list_move.append('Voiture '+str(turn_state.c)+' vers '+'la droite')
-        else:
-            list_move.append('Voiture '+str(turn_state.c)+' vers '+'la gauche')
-    else:
-        if turn_state.d > 0:
-            list_move.append('Voiture '+str(turn_state.c)+' vers '+'le bas')
-        else:
-            list_move.append('Voiture '+str(turn_state.c)+' vers '+'le haut')
-       
-    #rh.color[turn_state.prev.c]
-    
-    turn_state = turn_state.prev # From that successfull state, go back to the previous state to get the list of all movements 
-    pos = turn_state.pos
-    
-    d=d+1
-
-
-list_move = list_move[::-1] # Inverse the list of movements to be in the right order
-
-     
