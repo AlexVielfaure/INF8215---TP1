@@ -27,7 +27,7 @@ class State:
         self.c = self.d = self.prev = None
         
         self.nb_moves = 0
-        self.h = 0
+        self.h = 99999
 
     """
     Constructeur d'un état à partir mouvement (c,d)
@@ -60,11 +60,11 @@ class State:
         
         cost = (4 - self.pos[0])
         
-        for i in range(len(rh.horiz)):
-            if (not rh.horiz[i]) & (rh.move_on[i] > self.pos[0]+1):
+        for i in range(rh.nbcars):
+            if (not rh.horiz[i]) and (rh.move_on[i] > self.pos[0]+1):
                 line_occupied = range(self.pos[i],self.pos[i]+rh.length[i])
                 if 2 in line_occupied: 
-                    cost =+ 1
+                    cost += 1     
         
         return cost
     
@@ -198,11 +198,38 @@ class Rushhour:
                         if not (s in visited):
                             fifo.append(s)
                             
-        return s_temp,len(visited)
+        return s_temp,len(visited)+1
         
         
                     
-    def solve_Astar(self, state):
+    def solve_Astar1(self, state):
+        visited = set()
+        
+        priority_queue = []
+        state.h = state.estimee1()
+        heapq.heappush(priority_queue, state)
+        
+        while priority_queue:
+            
+            s_temp = heapq.heappop(priority_queue) # premier élément retiré de la liste (first in first out)
+            
+            if s_temp.success(): # Si success arreté la boucle
+                break
+
+            else:
+
+                if not (s_temp in visited):
+                    visited.add(s_temp)
+                    s_move = self.possible_moves(s_temp)
+
+                    for s in s_move:
+                        if not (s in visited):
+                            s.h = s.estimee1()
+                            heapq.heappush(priority_queue, s)
+
+        return s_temp, len(visited)+1
+    
+    def solve_Astar2(self, state):
         visited = set()
         
         priority_queue = []
@@ -214,7 +241,6 @@ class Rushhour:
             s_temp = heapq.heappop(priority_queue) # premier élément retiré de la liste (first in first out)
             
             if s_temp.success(): # Si success arreté la boucle
-
                 break
 
             else:
@@ -228,7 +254,7 @@ class Rushhour:
                             s.h = s.estimee2(self)
                             heapq.heappush(priority_queue, s)
 
-        return s_temp, len(visited)
+        return s_temp, len(visited)+1
     
                     
     def print_solution(self, state):
@@ -246,7 +272,7 @@ class Rushhour:
                     list_move.append('Voiture ' + str(self.color[state.c]) + ' vers ' + 'le bas')
                 else:
                     list_move.append('Voiture ' + str(self.color[state.c]) + ' vers ' + 'le haut')
-
+            
             state = state.prev  # From that successfull state, go back to the previous state to get the list of all movements
 
         list_move = list_move[::-1]
@@ -292,10 +318,12 @@ def solve46():
                  ["rouge", "vert clair", "jaune", "orange", "violet clair", "bleu ciel", "rose", "violet", "vert", "noir", "beige", "bleu"])
     s = State([1, 0, 3, 1, 1, 4, 3, 4, 4, 2, 4, 1])
     s1,nb_s = rh.solve(s)
-    s2,nb_a = rh.solve_Astar(s)
-    rh.print_solution(s2)
+    s2,nb_a1 = rh.solve_Astar1(s)
+    s3,nb_a2 = rh.solve_Astar2(s)
+    rh.print_solution(s3)
     print('Le nombre d''états visités pour slove est : '+ str(nb_s))
-    print('Le nombre d''états visités pour slove A* est : '+ str(nb_a))
+    print('Le nombre d''états visités pour slove A* estimee 1 est : '+ str(nb_a1))
+    print('Le nombre d''états visités pour slove A* estimee 2 est : '+ str(nb_a2))
 
 solve46()
 
@@ -307,10 +335,12 @@ def solve16():
                  ["rouge", "vert clair", "violet", "orange", "vert", "bleu ciel", "jaune", "bleu"])
     s = State([1, 0, 1, 4, 2, 4, 0, 1])
     s1,nb_s = rh.solve(s)
-    s2,nb_a = rh.solve_Astar(s)
-    rh.print_solution(s2)
+    s2,nb_a1 = rh.solve_Astar1(s)
+    s3,nb_a2 = rh.solve_Astar2(s)
+    rh.print_solution(s3)
     print('Le nombre d''états visités pour slove est : '+ str(nb_s))
-    print('Le nombre d''états visités pour slove A* est : '+ str(nb_a))
+    print('Le nombre d''états visités pour slove A* estimee 1 est : '+ str(nb_a1))
+    print('Le nombre d''états visités pour slove A* estimee 2 est : '+ str(nb_a2))
  
 solve16()
 
@@ -322,29 +352,13 @@ def solve81():
                  ["rouge", "jaune", "vert clair", "orange", "bleu clair", "rose", "violet clair","bleu", "violet", "vert", "noir", "beige", "jaune clair"])
     s = State([3, 0, 1, 0, 1, 1, 1, 0, 3, 4, 4, 0, 3])
     s1,nb_s = rh.solve(s)
-    s2,nb_a = rh.solve_Astar(s)
-    rh.print_solution(s2)
+    s2,nb_a1 = rh.solve_Astar1(s)
+    s3,nb_a2 = rh.solve_Astar2(s)
+    rh.print_solution(s3)
     print('Le nombre d''états visités pour slove est : '+ str(nb_s))
-    print('Le nombre d''états visités pour slove A* est : '+ str(nb_a))
+    print('Le nombre d''états visités pour slove A* estimee 1 est : '+ str(nb_a1))
+    print('Le nombre d''états visités pour slove A* estimee 2 est : '+ str(nb_a2))
 
 solve81()
 
-
-
-
-
-rh = Rushhour([True, True, False, False, True, True, False, False],
-             [2, 2, 3, 2, 3, 2, 3, 3],
-             [2, 0, 0, 0, 5, 4, 5, 3],
-             ["rouge", "vert clair", "violet", "orange", "vert", "bleu ciel", "jaune", "bleu"])
-s = State([1, 0, 1, 4, 2, 4, 0, 1])
-
-
-for i in range(len(rh.horiz)):
-    if (not rh.horiz[i]) & (rh.move_on[i] > s.pos[0]+1):
-        line_occupied = range(s.pos[i],s.pos[i]+rh.length[i])
-        if 2 in line_occupied: 
-            print(i)
-    
-    
 
