@@ -68,6 +68,36 @@ class State:
         
         return cost
     
+    def estimee3(self, rh):
+        
+        cost = (4 - self.pos[0])
+        rh.init_positions(self)
+        
+        for i in range(rh.nbcars):
+            if (not rh.horiz[i]) and (rh.move_on[i] > self.pos[0]+1):
+                line_occupied = range(self.pos[i],self.pos[i]+rh.length[i])
+                if 2 in line_occupied:
+                    if rh.move_on[i] == 1:
+                        if rh.free_pos[rh.move_on[i]-1,self.pos[i]] == False:
+                            cost += 2
+                    if rh.move_on[i] >= 2:
+                        if rh.free_pos[rh.move_on[i]-1,self.pos[i]] == False:
+                            cost += 2
+                        if rh.free_pos[rh.move_on[i]-2,self.pos[i]] == False:
+                            cost += 1
+                    if rh.move_on[i] + rh.length[i] == 5 :
+                        if rh.free_pos[rh.move_on[i]+rh.length[i],self.pos[i]] == False:
+                            cost += 2
+                    if rh.move_on[i] + rh.length[i] <= 4 :
+                        if rh.free_pos[rh.move_on[i]+rh.length[i],self.pos[i]] == False:
+                            cost += 2
+                        if rh.free_pos[rh.move_on[i]+rh.length[i]+1,self.pos[i]] == False:
+                            cost += 1
+                    else:   
+                        cost += 1
+                        
+        return cost
+    
     def __eq__(self, other):
         if not isinstance(other, State):
             return NotImplemented
@@ -256,6 +286,35 @@ class Rushhour:
 
         return s_temp, len(visited)+1
     
+    
+    def solve_Astar3(self, state):
+        visited = set()
+        
+        priority_queue = []
+        state.h = state.estimee3(self)
+        heapq.heappush(priority_queue, state)
+        
+        while priority_queue:
+            
+            s_temp = heapq.heappop(priority_queue) # premier élément retiré de la liste (first in first out)
+            
+            if s_temp.success(): # Si success arreté la boucle
+                break
+
+            else:
+
+                if not (s_temp in visited):
+                    visited.add(s_temp)
+                    s_move = self.possible_moves(s_temp)
+
+                    for s in s_move:
+                        if not (s in visited):
+                            s.h = s.estimee3(self)
+                            heapq.heappush(priority_queue, s)
+
+        return s_temp, len(visited)+1
+    
+    
                     
     def print_solution(self, state):
         
@@ -320,10 +379,12 @@ def solve46():
     s1,nb_s = rh.solve(s)
     s2,nb_a1 = rh.solve_Astar1(s)
     s3,nb_a2 = rh.solve_Astar2(s)
+    s4,nb_a3 = rh.solve_Astar3(s)
     rh.print_solution(s3)
     print('Le nombre d''états visités pour slove est : '+ str(nb_s))
     print('Le nombre d''états visités pour slove A* estimee 1 est : '+ str(nb_a1))
     print('Le nombre d''états visités pour slove A* estimee 2 est : '+ str(nb_a2))
+    print('Le nombre d''états visités pour slove A* estimee 3 est : '+ str(nb_a3))
 
 solve46()
 
@@ -335,12 +396,15 @@ def solve16():
                  ["rouge", "vert clair", "violet", "orange", "vert", "bleu ciel", "jaune", "bleu"])
     s = State([1, 0, 1, 4, 2, 4, 0, 1])
     s1,nb_s = rh.solve(s)
+    s1,nb_s = rh.solve(s)
     s2,nb_a1 = rh.solve_Astar1(s)
     s3,nb_a2 = rh.solve_Astar2(s)
+    s4,nb_a3 = rh.solve_Astar3(s)
     rh.print_solution(s3)
     print('Le nombre d''états visités pour slove est : '+ str(nb_s))
     print('Le nombre d''états visités pour slove A* estimee 1 est : '+ str(nb_a1))
     print('Le nombre d''états visités pour slove A* estimee 2 est : '+ str(nb_a2))
+    print('Le nombre d''états visités pour slove A* estimee 3 est : '+ str(nb_a3))
  
 solve16()
 
@@ -352,12 +416,15 @@ def solve81():
                  ["rouge", "jaune", "vert clair", "orange", "bleu clair", "rose", "violet clair","bleu", "violet", "vert", "noir", "beige", "jaune clair"])
     s = State([3, 0, 1, 0, 1, 1, 1, 0, 3, 4, 4, 0, 3])
     s1,nb_s = rh.solve(s)
+    s1,nb_s = rh.solve(s)
     s2,nb_a1 = rh.solve_Astar1(s)
     s3,nb_a2 = rh.solve_Astar2(s)
+    s4,nb_a3 = rh.solve_Astar3(s)
     rh.print_solution(s3)
     print('Le nombre d''états visités pour slove est : '+ str(nb_s))
     print('Le nombre d''états visités pour slove A* estimee 1 est : '+ str(nb_a1))
     print('Le nombre d''états visités pour slove A* estimee 2 est : '+ str(nb_a2))
+    print('Le nombre d''états visités pour slove A* estimee 3 est : '+ str(nb_a3))
 
 solve81()
 
