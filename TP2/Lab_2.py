@@ -258,7 +258,7 @@ class MiniMaxSearch:
         return best_move
 
     def decide_best_move_1(self):
-        #c,d = self.minimax(self.search_depth,self.state)
+        #best_new_state = self.minimax(self.search_depth,self.state)
         
         #self.state = self.state.move(c,d)
         
@@ -287,11 +287,25 @@ class MiniMaxSearch:
 
     def print_move(self, is_max, state):
         
-        new_state = self.minimax_1(self.search_depth,state)
-        car = self.rushhour.color[new_state.c]
-        move = new_state.d
-        
-        print('La voiture '+car+' en ' + str(move))
+        if is_max:
+            new_state = self.minimax_1(self.search_depth,state)
+            car = self.rushhour.color[new_state.c]
+            
+            if self.rushhour.horiz[new_state.c]:
+                if new_state.d > 0:
+                    move = 'la droite'
+                else:
+                    move = 'la gauche'
+            else:
+                if new_state.d > 0:
+                    move = 'le haut'
+                else:
+                    move = 'la bas'
+            print('La voiture '+car+' vers ' + move)
+            
+        else :
+             #Compléter pour roche
+            print('roche')
           
 
 #%%
