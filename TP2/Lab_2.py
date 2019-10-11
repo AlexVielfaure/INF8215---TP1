@@ -291,7 +291,7 @@ class MiniMaxSearch:
         car = self.rushhour.color[new_state.c]
         move = new_state.d
         
-        print('La voiture '+car+' en '+str(move))
+        print('La voiture '+car+' en ' + str(move))
           
 
 #%%
@@ -308,17 +308,16 @@ def test_print_move():
 test_print_move()     
         
     
-    
+#    
 #rh = Rushhour([True], [2], [2], ["rouge"])
 #s = State([0])
 #s = s.put_rock((3,1)) # Roche dans la case 3-1
 #s = s.move(0, 1) # Voiture rouge vers la droite
 #
 #
-#algo = MiniMaxSearch(rh, s, 6)
+#algo = MiniMaxSearch(rh, s, 1)
 #algo.print_move(True, s)
 #algo.print_move(False, s)
-#
 #
 #test = algo.minimax_1(algo.search_depth,algo.state)
 #
