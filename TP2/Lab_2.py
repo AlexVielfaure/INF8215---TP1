@@ -52,7 +52,7 @@ class State:
         
         return new_state
             
-    def score_state(self):
+    def score_state(self,rh):
         
         cost = (4 - self.pos[0] + self.nb_moves)
         rh.init_positions(self)
@@ -230,13 +230,13 @@ class MiniMaxSearch:
     def minimax_1(self, current_depth, current_state): 
         
         if current_depth == 0  or current_state.success():
-            current_state.score_state()
+            current_state.score_state(self.rushhour)
             return current_state
         
         v = State([0])
         v.score=999
         
-        for successor in rh.possible_moves(current_state):
+        for successor in self.rushhour.possible_moves(current_state):
             v=min(v,self.minimax_1(current_depth - 1,successor))
             
         best_move = v
@@ -307,7 +307,7 @@ def test_print_move():
 
 test_print_move()     
         
-    
+
 #    
 #rh = Rushhour([True], [2], [2], ["rouge"])
 #s = State([0])
