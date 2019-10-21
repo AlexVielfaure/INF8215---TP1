@@ -61,6 +61,14 @@ class State:
             if (not rh.horiz[i]) and (rh.move_on[i] > self.pos[0]+1):
                 line_occupied = range(self.pos[i],self.pos[i]+rh.length[i])
                 if 2 in line_occupied:
+                    if rh.length[i] == 3:
+                        if not np.any(rh.free_pos[3:,self.pos[i]]):
+                            
+                            
+                    
+                    
+                    
+                    
                     if rh.move_on[i] == 1:
                         if rh.free_pos[rh.move_on[i]-1,self.pos[i]] == False:
                             cost += 2
@@ -234,16 +242,26 @@ class MiniMaxSearch:
             return current_state
         
         v = State([0])
-        v.score=999
+        v.score = np.inf
         
         for successor in self.rushhour.possible_moves(current_state):
-            v=min(v,self.minimax_1(current_depth - 1,successor))
+            if np.random.randint(2):
+                v=min(v,self.minimax_1(current_depth - 1,successor))
+            else:
+                v= min(self.minimax_1(current_depth - 1,successor),v)
             
         best_move = v
-        if (self.search_depth - current_depth) >= 1:
-            best_move = best_move.prev
         
-        return best_move
+        if (self.search_depth - current_depth) >= 1:
+            new_best_move = best_move.prev
+            new_best_move.score = best_move.score
+            
+        else:
+            new_best_move = best_move
+        
+        #print(new_best_move.score)
+        
+        return new_best_move
     
     def minimax_2(self, current_depth, current_state, is_max): 
         #TODO
@@ -258,11 +276,12 @@ class MiniMaxSearch:
         return best_move
 
     def decide_best_move_1(self):
-        #best_new_state = self.minimax(self.search_depth,self.state)
+        
+        self.state = self.minimax_1(self.search_depth,self.state)
         
         #self.state = self.state.move(c,d)
         
-        return 
+        #return 
 
     def decide_best_move_2(self, is_max):
         #TODO
@@ -278,16 +297,20 @@ class MiniMaxSearch:
 
     def solve(self, state, is_singleplayer):
         
-        #Check if state is final
+        comp = 0
         
-        #Call decie_best_move until game ends
-        
-        
+                
+        while not self.state.success() and comp < 10:
+            self.print_move(False, self.state)
+            self.decide_best_move_1()
+            
+            comp = comp + 1
+    
         return
 
     def print_move(self, is_max, state):
         
-        if is_max:
+        if not is_max:
             new_state = self.minimax_1(self.search_depth,state)
             car = self.rushhour.color[new_state.c]
             
@@ -297,7 +320,7 @@ class MiniMaxSearch:
                 else:
                     move = 'la gauche'
             else:
-                if new_state.d > 0:
+                if new_state.d < 0:
                     move = 'le haut'
                 else:
                     move = 'la bas'
@@ -309,30 +332,81 @@ class MiniMaxSearch:
           
 
 #%%
-def test_print_move():
-    rh = Rushhour([True], [2], [2], ["rouge"])
-    s = State([0])
-    s = s.put_rock((3,1)) # Roche dans la case 3-1
-    s = s.move(0, 1) # Voiture rouge vers la droite
+#def test_print_move():
+#    rh = Rushhour([True, False],
+#                 [2, 3],
+#                 [2, 2],
+#                 ["rouge", "vert"])
+#    s = State([0, 2])
+#    algo = MiniMaxSearch(rh, s,3) 
+#    algo.rushhour.init_positions(s)
+#    
+#    print(algo.rushhour.free_pos)
+#    
+#    #s = s.put_rock((3,1)) # Roche dans la case 3-1
+#    #s = s.move(0, 1) # Voiture rouge vers la droite
+#
+#    algo.print_move(True, s)
+#    algo.print_move(False, s)
+#
+#test_print_move()     
+#        
 
-    algo = MiniMaxSearch(rh, s, 1)
-    algo.print_move(True, s)
-    algo.print_move(False, s)
 
-test_print_move()     
+#rh = Rushhour([True, False],
+#             [2, 3],
+#             [2, 2],
+#             ["rouge", "vert"])
+#s = State([0, 2])
+#algo = MiniMaxSearch(rh, s, 1) 
+#algo.rushhour.init_positions(s)
+#algo.solve(s, True)
+
+
+# Solution optimale: 9 moves
+rh = Rushhour([True, False, False, False, True],
+                 [2, 3, 2, 3, 3],
+                 [2, 4, 5, 1, 5],
+                 ["rouge", "vert", "bleu", "orange", "jaune"])
+s = State([1, 0, 1, 3, 2])
+algo = MiniMaxSearch(rh, s,1) 
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+test = algo.rushhour.free_pos
+algo.solve(s, True)
+test2 = algo.rushhour.free_pos
+
+
+#%%
+#    def score_state(self,rh):
+#        
+#        cost = (4 - self.pos[0] + self.nb_moves)
+#        rh.init_positions(self)
+#        
+#        for i in range(rh.nbcars):
+#            if (not rh.horiz[i]) and (rh.move_on[i] > self.pos[0]+1):
+#                line_occupied = range(self.pos[i],self.pos[i]+rh.length[i])
+#                if 2 in line_occupied:
+#                    
+#                    if rh.move_on[i] == 1:
+#                        if rh.free_pos[rh.move_on[i]-1,self.pos[i]] == False:
+#                            cost += 2
+#                    if rh.move_on[i] >= 2:
+#                        if rh.free_pos[rh.move_on[i]-1,self.pos[i]] == False:
+#                            cost += 2
+#                        if rh.free_pos[rh.move_on[i]-2,self.pos[i]] == False:
+#                            cost += 1
+#                    if rh.move_on[i] + rh.length[i] == 5 :
+#                        if rh.free_pos[rh.move_on[i]+rh.length[i],self.pos[i]] == False:
+#                            cost += 2
+#                    if rh.move_on[i] + rh.length[i] <= 4 :
+#                        if rh.free_pos[rh.move_on[i]+rh.length[i],self.pos[i]] == False:
+#                            cost += 2
+#                        if rh.free_pos[rh.move_on[i]+rh.length[i]+1,self.pos[i]] == False:
+#                            cost += 1
+#                    else:   
+#                        cost += 1
+#                        
+#        self.score = cost
         
 
-#    
-#rh = Rushhour([True], [2], [2], ["rouge"])
-#s = State([0])
-#s = s.put_rock((3,1)) # Roche dans la case 3-1
-#s = s.move(0, 1) # Voiture rouge vers la droite
-#
-#
-#algo = MiniMaxSearch(rh, s, 1)
-#algo.print_move(True, s)
-#algo.print_move(False, s)
-#
-#test = algo.minimax_1(algo.search_depth,algo.state)
-#
-#test.pos
