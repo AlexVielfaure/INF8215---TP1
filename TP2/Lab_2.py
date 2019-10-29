@@ -10,6 +10,8 @@ import copy
 from collections import deque
 
 #%%
+
+
 class State:
     
     """
@@ -52,6 +54,57 @@ class State:
         
         return new_state
             
+    
+    def which_car(self,rh,target_line,target_column):
+        for car in range(rh.nbcars):
+            if (not rh.horiz[car]): # vertical cars
+                for line in range(rh.length[car]):
+                    if((self.pos[car]+line == target_line) and (rh.move_on[car] == target_column)):
+                        return car
+                        break
+            else:   # horizontal cars
+                for column in range(rh.length[car]):
+                    if((self.pos[car]+column == target_column) and (rh.move_on[car] == target_line)):
+                        return car
+                        break
+        return -1
+    
+    def is_block(self,c,posb,rh):
+    
+        c=c
+        posb=posb
+        
+        n = rh.length[c]
+        rg = range(6)
+        poss_rang = list(zip(*(rg[i:] for i in range(n))))
+        ar = []
+        for i in poss_rang:
+            ar.append(abs(i[0] - self.pos[c]))
+        sort_rang = [x for _,x in sorted(zip(ar,poss_rang))]
+        
+        test = ()
+        for i in sort_rang:
+            if not (posb in i):
+                test = i
+                break
+        #print(test)
+        
+        new_block = []
+        for i in test:
+            if not rh.horiz[c]:
+                blocking_car = self.which_car(rh,i,rh.move_on[c])
+            else: 
+                blocking_car = self.which_car(rh,rh.move_on[c],i)
+                
+            if (blocking_car != c) and (blocking_car != -1):
+                if rh.horiz[blocking_car] == rh.horiz[c]:
+                    ff = set(test).intersection(set(range(self.pos[blocking_car],self.pos[blocking_car]+rh.length[blocking_car]))).pop()
+                    new_block.append((blocking_car,ff))
+                else:
+                    new_block.append((blocking_car,rh.move_on[c]))
+                
+        return new_block
+    
     def score_state(self,rh):
         
         cost = (4 - self.pos[0] + self.nb_moves)
@@ -61,33 +114,22 @@ class State:
             if (not rh.horiz[i]) and (rh.move_on[i] > self.pos[0]+1):
                 line_occupied = range(self.pos[i],self.pos[i]+rh.length[i])
                 if 2 in line_occupied:
-                    if rh.length[i] == 3:
-                        if not np.any(rh.free_pos[3:,self.pos[i]]):
-                            
-                            
-                    
-                    
-                    
-                    
-                    if rh.move_on[i] == 1:
-                        if rh.free_pos[rh.move_on[i]-1,self.pos[i]] == False:
-                            cost += 2
-                    if rh.move_on[i] >= 2:
-                        if rh.free_pos[rh.move_on[i]-1,self.pos[i]] == False:
-                            cost += 2
-                        if rh.free_pos[rh.move_on[i]-2,self.pos[i]] == False:
-                            cost += 1
-                    if rh.move_on[i] + rh.length[i] == 5 :
-                        if rh.free_pos[rh.move_on[i]+rh.length[i],self.pos[i]] == False:
-                            cost += 2
-                    if rh.move_on[i] + rh.length[i] <= 4 :
-                        if rh.free_pos[rh.move_on[i]+rh.length[i],self.pos[i]] == False:
-                            cost += 2
-                        if rh.free_pos[rh.move_on[i]+rh.length[i]+1,self.pos[i]] == False:
-                            cost += 1
-                    else:   
-                        cost += 1
+                    new_c = [(i,2)]
+                    compt = 0
+                    while new_c:
+                        #print(new_c)
+                        val = new_c.pop()
+                        c = val[0]
+                        posb= val[1]
                         
+                        new_c += self.is_block(c,posb,rh)
+                        compt = compt+2
+                    
+                    cost += compt
+                    
+                    if rh.length[i] == 3:
+                        cost += (3-self.pos[i])
+        #print(cost)             
         self.score = cost
         
 
@@ -299,10 +341,11 @@ class MiniMaxSearch:
         
         comp = 0
         
-                
-        while not self.state.success() and comp < 10:
-            self.print_move(False, self.state)
+        while not self.state.success() and comp < 20:
             self.decide_best_move_1()
+            
+            print(self.state.pos)
+            self.print_move(False, self.state)
             
             comp = comp + 1
     
@@ -311,9 +354,9 @@ class MiniMaxSearch:
     def print_move(self, is_max, state):
         
         if not is_max:
-            new_state = self.minimax_1(self.search_depth,state)
+            new_state = state#self.minimax_1(self.search_depth,state)
             car = self.rushhour.color[new_state.c]
-            
+                        
             if self.rushhour.horiz[new_state.c]:
                 if new_state.d > 0:
                     move = 'la droite'
@@ -364,49 +407,38 @@ class MiniMaxSearch:
 
 
 # Solution optimale: 9 moves
-rh = Rushhour([True, False, False, False, True],
-                 [2, 3, 2, 3, 3],
-                 [2, 4, 5, 1, 5],
-                 ["rouge", "vert", "bleu", "orange", "jaune"])
-s = State([1, 0, 1, 3, 2])
-algo = MiniMaxSearch(rh, s,1) 
+#rh = Rushhour([True, False, False, False, True],
+#                 [2, 3, 2, 3, 3],
+#                 [2, 4, 5, 1, 5],
+#                 ["rouge", "vert", "bleu", "orange", "jaune"])
+#s = State([1, 0, 1, 3, 2])
+#algo = MiniMaxSearch(rh, s,1) 
+#algo.rushhour.init_positions(s)
+#print(algo.rushhour.free_pos)
+#algo.solve(s, True)
+
+
+# solution optimale: 16 moves
+#rh = Rushhour([True, True, False, False, True, True, False, False],
+#                 [2, 2, 3, 2, 3, 2, 3, 3],
+#                 [2, 0, 0, 0, 5, 4, 5, 3],
+#                 ["rouge", "vert", "mauve", "orange", "emeraude", "lime", "jaune", "bleu"])
+#s = State([1, 0, 1, 4, 2, 4, 0, 1])
+#algo = MiniMaxSearch(rh, s, 1) 
+#algo.rushhour.init_positions(s)
+#print(algo.rushhour.free_pos)
+#algo.solve(s, True)
+
+
+# solution optimale: 14 moves
+rh = Rushhour([True, False, True, False, False, False, True, True, False, True, True],
+                 [2, 2, 3, 2, 2, 3, 3, 2, 2, 2, 2],
+                 [2, 0, 0, 3, 4, 5, 3, 5, 2, 5, 4],
+                 ["rouge", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+s = State([0, 0, 3, 1, 2, 1, 0, 0, 4, 3, 4])
+algo = MiniMaxSearch(rh, s,1)
 algo.rushhour.init_positions(s)
 print(algo.rushhour.free_pos)
-test = algo.rushhour.free_pos
 algo.solve(s, True)
-test2 = algo.rushhour.free_pos
 
-
-#%%
-#    def score_state(self,rh):
-#        
-#        cost = (4 - self.pos[0] + self.nb_moves)
-#        rh.init_positions(self)
-#        
-#        for i in range(rh.nbcars):
-#            if (not rh.horiz[i]) and (rh.move_on[i] > self.pos[0]+1):
-#                line_occupied = range(self.pos[i],self.pos[i]+rh.length[i])
-#                if 2 in line_occupied:
-#                    
-#                    if rh.move_on[i] == 1:
-#                        if rh.free_pos[rh.move_on[i]-1,self.pos[i]] == False:
-#                            cost += 2
-#                    if rh.move_on[i] >= 2:
-#                        if rh.free_pos[rh.move_on[i]-1,self.pos[i]] == False:
-#                            cost += 2
-#                        if rh.free_pos[rh.move_on[i]-2,self.pos[i]] == False:
-#                            cost += 1
-#                    if rh.move_on[i] + rh.length[i] == 5 :
-#                        if rh.free_pos[rh.move_on[i]+rh.length[i],self.pos[i]] == False:
-#                            cost += 2
-#                    if rh.move_on[i] + rh.length[i] <= 4 :
-#                        if rh.free_pos[rh.move_on[i]+rh.length[i],self.pos[i]] == False:
-#                            cost += 2
-#                        if rh.free_pos[rh.move_on[i]+rh.length[i]+1,self.pos[i]] == False:
-#                            cost += 1
-#                    else:   
-#                        cost += 1
-#                        
-#        self.score = cost
-        
 
