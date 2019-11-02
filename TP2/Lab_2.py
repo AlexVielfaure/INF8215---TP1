@@ -88,6 +88,7 @@ class State:
                 test = i
                 break
         #print(test)
+        dis = abs(test[0]-self.pos[c])
         
         new_block = []
         for i in test:
@@ -102,8 +103,8 @@ class State:
                     new_block.append((blocking_car,ff))
                 else:
                     new_block.append((blocking_car,rh.move_on[c]))
-                
-        return new_block
+               
+        return [new_block,dis,test[0]]
     
     def score_state(self,rh):
         
@@ -116,20 +117,52 @@ class State:
                 if 2 in line_occupied:
                     new_c = [(i,2)]
                     compt = 0
+                    visited = []
                     while new_c:
                         #print(new_c)
                         val = new_c.pop()
                         c = val[0]
-                        posb= val[1]
-                        
-                        new_c += self.is_block(c,posb,rh)
-                        compt = compt+2
+                        if not c in visited:
+                            visited.append(c)
+                            
+                            posb= val[1]
+                            
+                            block_val = self.is_block(c,posb,rh)
+                            new_c += block_val[0]
+                            
+                            if new_c and not rh.horiz[c] and rh.length[c] == 3 and rh.move_on[c] >self.pos[0]+1:
+                                compt +=2
+                                
+                            dis = block_val[1]
+                            
+                            compt = compt+dis+3
+                            
+                            if self.pos[c] - self.prev.pos[c] == 0 : #If you don't move a blocking car
+                                compt += 1
+                            
+                            #If you move a blocking car in a position that cannot move
+                            pos_car = 0
+                            for j in rh.possible_moves(self) :
+                                if self.pos[c] - j.pos[c] != 0:
+                                    pos_car += 1
+                            if pos_car == 0 :
+                                pos_car = -20
+                            compt += (2-pos_car)
                     
                     cost += compt
                     
-                    if rh.length[i] == 3:
-                        cost += (3-self.pos[i])
-        #print(cost)             
+                    if rh.length[i] == 3: #If a blocking car of red of length 3 is not in good position 
+                        if (3-self.pos[i]) > 0:
+                            cost += 1 
+        
+        #Prevent cycles
+        if self.prev.c:
+            if (self.prev.c - self.c) == 0:
+                if (self.prev.d + self.d) == 0 :
+                    cost +=1000
+
+#        print(cost, end =" ") 
+#        print(self.pos - self.prev.pos)             
         self.score = cost
         
 
@@ -344,7 +377,7 @@ class MiniMaxSearch:
         while not self.state.success() and comp < 20:
             self.decide_best_move_1()
             
-            print(self.state.pos)
+            #print(self.state.pos)
             self.print_move(False, self.state)
             
             comp = comp + 1
@@ -366,7 +399,7 @@ class MiniMaxSearch:
                 if new_state.d < 0:
                     move = 'le haut'
                 else:
-                    move = 'la bas'
+                    move = 'le bas'
             print('La voiture '+car+' vers ' + move)
             
         else :
@@ -407,15 +440,15 @@ class MiniMaxSearch:
 
 
 # Solution optimale: 9 moves
-#rh = Rushhour([True, False, False, False, True],
-#                 [2, 3, 2, 3, 3],
-#                 [2, 4, 5, 1, 5],
-#                 ["rouge", "vert", "bleu", "orange", "jaune"])
-#s = State([1, 0, 1, 3, 2])
-#algo = MiniMaxSearch(rh, s,1) 
-#algo.rushhour.init_positions(s)
-#print(algo.rushhour.free_pos)
-#algo.solve(s, True)
+rh = Rushhour([True, False, False, False, True],
+                 [2, 3, 2, 3, 3],
+                 [2, 4, 5, 1, 5],
+                 ["rouge", "vert", "bleu", "orange", "jaune"])
+s = State([1, 0, 1, 3, 2])
+algo = MiniMaxSearch(rh, s,1) 
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+algo.solve(s, True)
 
 
 # solution optimale: 16 moves
@@ -429,16 +462,17 @@ class MiniMaxSearch:
 #print(algo.rushhour.free_pos)
 #algo.solve(s, True)
 
-
 # solution optimale: 14 moves
-rh = Rushhour([True, False, True, False, False, False, True, True, False, True, True],
-                 [2, 2, 3, 2, 2, 3, 3, 2, 2, 2, 2],
-                 [2, 0, 0, 3, 4, 5, 3, 5, 2, 5, 4],
-                 ["rouge", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
-s = State([0, 0, 3, 1, 2, 1, 0, 0, 4, 3, 4])
-algo = MiniMaxSearch(rh, s,1)
-algo.rushhour.init_positions(s)
-print(algo.rushhour.free_pos)
-algo.solve(s, True)
+#rh = Rushhour([True, False, True, False, False, False, True, True, False, True, True],
+#                 [2, 2, 3, 2, 2, 3, 3, 2, 2, 2, 2],
+#                 [2, 0, 0, 3, 4, 5, 3, 5, 2, 5, 4],
+#                 ["rouge", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+#s = State([0, 0, 3, 1, 2, 1, 0, 0, 4, 3, 4])
+#algo = MiniMaxSearch(rh, s,1)
+#algo.rushhour.init_positions(s)
+#print(algo.rushhour.free_pos)
+#algo.solve(s, True)
+
+
 
 
