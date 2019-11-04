@@ -43,13 +43,19 @@ class State:
         s.c = c
         s.d = d
         s.nb_moves = self.nb_moves + 1
+        s.rock = self.rock
         # TODO
         return s
 
     def put_rock(self, rock_pos):
         
+
         temp_pos = self.pos.copy()
         new_state = State(temp_pos)
+        new_state.prev = self
+        new_state.c = self.c
+        new_state.d = self.d
+        new_state.nb_moves = self.nb_moves + 1
         new_state.rock = rock_pos
         
         return new_state
@@ -126,11 +132,12 @@ class State:
                             visited.append(c)
                             
                             posb= val[1]
-                            
+
                             block_val = self.is_block(c,posb,rh)
                             new_c += block_val[0]
                             
-                            if new_c and not rh.horiz[c] and rh.length[c] == 3 and rh.move_on[c] >self.pos[0]+1:
+                            #If a 3 length blocking car in the loop, add weight
+                            if new_c and not rh.horiz[c] and rh.length[c] == 3 and rh.move_on[c] > self.pos[0]+1:
                                 compt +=2
                                 
                             dis = block_val[1]
@@ -147,22 +154,24 @@ class State:
                                     pos_car += 1
                             if pos_car == 0 :
                                 pos_car = -20
+                                
                             compt += (2-pos_car)
                     
                     cost += compt
                     
                     if rh.length[i] == 3: #If a blocking car of red of length 3 is not in good position 
                         if (3-self.pos[i]) > 0:
-                            cost += 1 
-        
+                            cost += 1      
         #Prevent cycles
         if self.prev.c:
             if (self.prev.c - self.c) == 0:
                 if (self.prev.d + self.d) == 0 :
                     cost +=1000
-
+                    
 #        print(cost, end =" ") 
-#        print(self.pos - self.prev.pos)             
+#        print(self.c)
+#        print(self.pos - self.prev.pos)         
+#        print(self.rock)  
         self.score = cost
         
 
@@ -329,16 +338,53 @@ class MiniMaxSearch:
         
         if (self.search_depth - current_depth) >= 1:
             new_best_move = best_move.prev
-            new_best_move.score = best_move.score
-            
+            new_best_move.score = best_move.score  
         else:
             new_best_move = best_move
-        
-        #print(new_best_move.score)
-        
+
         return new_best_move
     
     def minimax_2(self, current_depth, current_state, is_max): 
+        
+        if current_depth == 0  or current_state.success():
+
+            #print(current_state.rock)
+            current_state.score_state(self.rushhour)
+            return current_state
+        
+        v = State([0])
+        
+        if not is_max:
+            v.score = np.inf
+            for successor in self.rushhour.possible_moves(current_state):
+                
+                if np.random.randint(2):
+                    v=min(v,self.minimax_2(current_depth - 1,successor,not is_max))
+                else:
+                    v=min(self.minimax_2(current_depth - 1,successor,not is_max),v)
+        else:
+            v.score = -1*np.inf
+            #self.rushhour.print_pretty_grid(current_state)
+            for successor in self.rushhour.possible_rock_moves(current_state):
+                #self.rushhour.print_pretty_grid(successor)
+                if np.random.randint(2):
+                    v=max(v,self.minimax_2(current_depth - 1,successor,not is_max))
+                else:
+                    v= max(self.minimax_2(current_depth - 1,successor,not is_max),v)
+         
+        best_move = v
+        
+   
+        if (self.search_depth - current_depth) >= 1:
+            new_best_move = best_move.prev
+            new_best_move.score = best_move.score  
+        else:
+            new_best_move = best_move
+
+        return new_best_move
+        
+        
+        
         #TODO
         return best_move
 
@@ -359,7 +405,12 @@ class MiniMaxSearch:
         #return 
 
     def decide_best_move_2(self, is_max):
-        #TODO
+
+        
+        self.state = self.minimax_2(self.search_depth,self.state,is_max)
+        
+        #self.rushhour.print_pretty_grid(self.state)
+        
         return
 
     def decide_best_move_pruning(self, is_max):
@@ -372,22 +423,38 @@ class MiniMaxSearch:
 
     def solve(self, state, is_singleplayer):
         
-        comp = 0
-        
-        while not self.state.success() and comp < 20:
-            self.decide_best_move_1()
+        if is_singleplayer:
             
-            #print(self.state.pos)
-            self.print_move(False, self.state)
-            
-            comp = comp + 1
-    
+            comp = 0
+            while not self.state.success() and comp < 40:
+                self.decide_best_move_1()
+                
+                #print(self.state.pos)
+                self.print_move(False, self.state)
+                
+                comp = comp + 1
+                
+        else :
+            comp = 0
+            is_max = False
+            while not self.state.success() and comp < 40:
+                self.decide_best_move_2(is_max)
+                
+                #print(self.state.pos)
+                self.print_move(is_max, self.state)
+                
+                is_max=not is_max
+                
+                comp = comp + 1
+
         return
 
     def print_move(self, is_max, state):
         
+        new_state = state
+        
         if not is_max:
-            new_state = state#self.minimax_1(self.search_depth,state)
+
             car = self.rushhour.color[new_state.c]
                         
             if self.rushhour.horiz[new_state.c]:
@@ -404,7 +471,7 @@ class MiniMaxSearch:
             
         else :
              #Compléter pour roche
-            print('roche')
+            print('Roche : ' + str(new_state.rock))
           
 
 #%%
@@ -452,27 +519,60 @@ algo.solve(s, True)
 
 
 # solution optimale: 16 moves
-#rh = Rushhour([True, True, False, False, True, True, False, False],
-#                 [2, 2, 3, 2, 3, 2, 3, 3],
-#                 [2, 0, 0, 0, 5, 4, 5, 3],
-#                 ["rouge", "vert", "mauve", "orange", "emeraude", "lime", "jaune", "bleu"])
-#s = State([1, 0, 1, 4, 2, 4, 0, 1])
-#algo = MiniMaxSearch(rh, s, 1) 
-#algo.rushhour.init_positions(s)
-#print(algo.rushhour.free_pos)
-#algo.solve(s, True)
+rh = Rushhour([True, True, False, False, True, True, False, False],
+                 [2, 2, 3, 2, 3, 2, 3, 3],
+                 [2, 0, 0, 0, 5, 4, 5, 3],
+                 ["rouge", "vert", "mauve", "orange", "emeraude", "lime", "jaune", "bleu"])
+s = State([1, 0, 1, 4, 2, 4, 0, 1])
+algo = MiniMaxSearch(rh, s, 1) 
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+algo.solve(s, True)
 
 # solution optimale: 14 moves
-#rh = Rushhour([True, False, True, False, False, False, True, True, False, True, True],
-#                 [2, 2, 3, 2, 2, 3, 3, 2, 2, 2, 2],
-#                 [2, 0, 0, 3, 4, 5, 3, 5, 2, 5, 4],
-#                 ["rouge", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
-#s = State([0, 0, 3, 1, 2, 1, 0, 0, 4, 3, 4])
-#algo = MiniMaxSearch(rh, s,1)
-#algo.rushhour.init_positions(s)
-#print(algo.rushhour.free_pos)
-#algo.solve(s, True)
+rh = Rushhour([True, False, True, False, False, False, True, True, False, True, True],
+                 [2, 2, 3, 2, 2, 3, 3, 2, 2, 2, 2],
+                 [2, 0, 0, 3, 4, 5, 3, 5, 2, 5, 4],
+                 ["rouge", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+s = State([0, 0, 3, 1, 2, 1, 0, 0, 4, 3, 4])
+algo = MiniMaxSearch(rh, s,1)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+algo.solve(s, True)
+
+
+#%%
+# Solution optimale: 9 moves
+rh = Rushhour([True, False, False, False, True],
+                 [2, 3, 2, 3, 3],
+                 [2, 4, 5, 1, 5],
+                 ["rouge", "vert", "bleu", "orange", "jaune"])
+s = State([1, 0, 1, 3, 2])
+algo = MiniMaxSearch(rh, s, 2)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+algo.solve(s, False)
 
 
 
+# solution optimale: 16 moves
+rh = Rushhour([True, True, False, False, True, True, False, False],
+                 [2, 2, 3, 2, 3, 2, 3, 3],
+                 [2, 0, 0, 0, 5, 4, 5, 3],
+                 ["rouge", "vert", "mauve", "orange", "emeraude", "lime", "jaune", "bleu"])
+s = State([1, 0, 1, 4, 2, 4, 0, 1])
+algo = MiniMaxSearch(rh, s, 3) 
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+algo.solve(s, False) 
 
+# solution optimale: 14 moves
+rh = Rushhour([True, False, True, False, False, False, True, True, False, True, True],
+                 [2, 2, 3, 2, 2, 3, 3, 2, 2, 2, 2],
+                 [2, 0, 0, 3, 4, 5, 3, 5, 2, 5, 4],
+                 ["rouge", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+s = State([0, 0, 3, 1, 2, 1, 0, 0, 4, 3, 4])
+algo = MiniMaxSearch(rh, s,3)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+algo.solve(s, False)
