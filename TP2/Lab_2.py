@@ -320,6 +320,8 @@ class MiniMaxSearch:
         self.rushhour = rushHour
         self.state = initial_state
         self.search_depth = search_depth
+        self.search_car = search_depth
+        self.search_rock = 2
 
     def minimax_1(self, current_depth, current_state): 
         
@@ -386,11 +388,7 @@ class MiniMaxSearch:
 
         return new_best_move
         
-        
-        
-        #TODO
-        return best_move
-
+    
     def minimax_pruning(self, current_depth, current_state, is_max, alpha, beta):
         global nb_state
         if current_depth == 0  or current_state.success():
@@ -440,10 +438,7 @@ class MiniMaxSearch:
 
         return new_best_move
         
-        
-        
-        #TODO
-        return best_move
+
 
     def expectimax(self, current_depth, current_state, is_max):
         global nb_state
@@ -501,31 +496,34 @@ class MiniMaxSearch:
 
         return new_best_move
         
-        
-        
-        #TODO
-        return best_move
+    
 
     def decide_best_move_1(self):
         
         self.state = self.minimax_1(self.search_depth,self.state)
-        
-        #self.state = self.state.move(c,d)
-        
-        #return 
+                
+        return 
 
     def decide_best_move_2(self, is_max):
 
-        
-        self.state = self.minimax_2(self.search_depth,self.state,is_max)
-        
-        #self.rushhour.print_pretty_grid(self.state)
+        if not is_max:
+            self.search_depth = self.search_car
+            self.state = self.minimax_2(self.search_depth,self.state,is_max)
+        else:
+            self.search_depth = self.search_rock
+            self.state = self.minimax_2(self.search_depth,self.state,is_max)
         
         return
+        
 
     def decide_best_move_pruning(self, is_max):
         
-        self.state = self.minimax_pruning(self.search_depth,self.state,is_max, -np.inf, np.inf)
+        if not is_max:
+            self.search_depth = self.search_car
+            self.state = self.minimax_pruning(self.search_depth,self.state,is_max, -np.inf, np.inf)
+        else:
+            self.search_depth = self.search_rock
+            self.state = self.minimax_pruning(self.search_depth,self.state,is_max, -np.inf, np.inf)
         
         return
 
@@ -566,7 +564,7 @@ class MiniMaxSearch:
                         self.decide_best_move_pruning(is_max)
                     else:
                         self.decide_best_move_expectimax(is_max)
-                #print(self.state.pos)
+
                 self.print_move(is_max, self.state)
                 
                 is_max=not is_max
@@ -601,36 +599,6 @@ class MiniMaxSearch:
           
 
 #%%
-#def test_print_move():
-#    rh = Rushhour([True, False],
-#                 [2, 3],
-#                 [2, 2],
-#                 ["rouge", "vert"])
-#    s = State([0, 2])
-#    algo = MiniMaxSearch(rh, s,3) 
-#    algo.rushhour.init_positions(s)
-#    
-#    print(algo.rushhour.free_pos)
-#    
-#    #s = s.put_rock((3,1)) # Roche dans la case 3-1
-#    #s = s.move(0, 1) # Voiture rouge vers la droite
-#
-#    algo.print_move(True, s)
-#    algo.print_move(False, s)
-#
-#test_print_move()     
-#        
-
-
-#rh = Rushhour([True, False],
-#             [2, 3],
-#             [2, 2],
-#             ["rouge", "vert"])
-#s = State([0, 2])
-#algo = MiniMaxSearch(rh, s, 1) 
-#algo.rushhour.init_positions(s)
-#algo.solve(s, True)
-
 
 # Solution optimale: 9 moves
 rh = Rushhour([True, False, False, False, True],
@@ -684,7 +652,6 @@ algo.solve(s, False)
 tableau[0,0] = nb_state
 
 
-
 # solution optimale: 16 moves
 rh = Rushhour([True, True, False, False, True, True, False, False],
                  [2, 2, 3, 2, 3, 2, 3, 3],
@@ -697,7 +664,6 @@ print(algo.rushhour.free_pos)
 nb_state = 0
 algo.solve(s, False)
 tableau[0,1] = nb_state
-
 
 # solution optimale: 14 moves
 rh = Rushhour([True, False, True, False, False, False, True, True, False, True, True],
@@ -726,7 +692,6 @@ print(algo.rushhour.free_pos)
 nb_state = 0
 algo.solve(s, False,True) # testing pruning
 tableau[1,0] = nb_state
-
 
 
 # solution optimale: 16 moves
@@ -804,7 +769,7 @@ nb_state = 0
 algo.solve(s, False,True,True) # testing expectimax
 tableau[2,2] = nb_state
 
-#tableau = pd.DataFrame(tableau,columns = ["9 moves","16 moves","14 moves"],
-#                               index = ["No Pruning","Pruning","Expectimax"])
+tableau = pd.DataFrame(tableau,columns = ["9 moves","16 moves","14 moves"],
+                               index = ["No Pruning","Pruning","Expectimax"])
 
 
