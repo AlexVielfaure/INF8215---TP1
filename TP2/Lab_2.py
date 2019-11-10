@@ -803,7 +803,7 @@ print(algo.rushhour.free_pos)
 nb_state = 0
 algo.solve(s, False,True,True) # testing expectimax
 tableau[3,2] = nb_state
-#%% Expectimax Pessimiste
+#%% Expectimax Aléa
 option = 2
 # Solution optimale: 9 moves
 rh = Rushhour([True, False, False, False, True],
