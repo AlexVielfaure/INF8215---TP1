@@ -170,10 +170,6 @@ class State:
                 if (self.prev.d + self.d) == 0 :
                     cost +=1000
                     
-#        print(cost, end =" ") 
-#        print(self.c)
-#        print(self.pos - self.prev.pos)         
-#        print(self.rock)  
         self.score = cost
         
 
@@ -393,7 +389,6 @@ class MiniMaxSearch:
         global nb_state
         if current_depth == 0  or current_state.success():
 
-            #print(current_state.rock)
             current_state.score_state(self.rushhour)
             nb_state = nb_state + 1
             return current_state
@@ -413,9 +408,7 @@ class MiniMaxSearch:
                 beta = min(beta,v.score)
         else:
             v.score = -1*np.inf
-            #self.rushhour.print_pretty_grid(current_state)
             for successor in self.rushhour.possible_rock_moves(current_state):
-                #self.rushhour.print_pretty_grid(successor)
                 if np.random.randint(2):
                     v=max(v,self.minimax_pruning(current_depth - 1,successor,not is_max, alpha, beta))
                 else:
@@ -714,6 +707,8 @@ print(algo.rushhour.free_pos)
 nb_state = 0
 algo.solve(s, False,True) # testing pruning
 tableau[1,2] = nb_state
+
+
 
 #%% Expectimax Optimiste
 option = 0
