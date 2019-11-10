@@ -411,10 +411,6 @@ class MiniMaxSearch:
                 if v.score <= alpha: # Pruning
                     break
                 beta = min(beta,v.score)
-#                print("beta",end = " ")
-#                print(beta)
-#                print("score",end = " ")
-#                print(v.score)
         else:
             v.score = -1*np.inf
             #self.rushhour.print_pretty_grid(current_state)
@@ -442,9 +438,9 @@ class MiniMaxSearch:
 
     def expectimax(self, current_depth, current_state, is_max):
         global nb_state
+        global option
         if current_depth == 0  or current_state.success():
 
-            #print(current_state.rock)
             current_state.score_state(self.rushhour)
             nb_state = nb_state + 1
             return current_state
@@ -458,34 +454,28 @@ class MiniMaxSearch:
                     v=min(v,self.expectimax(current_depth - 1,successor,not is_max))
                 else:
                     v=min(self.expectimax(current_depth - 1,successor,not is_max),v)
-#                print("beta",end = " ")
-#                print(beta)
-#                print("score",end = " ")
-#                print(v.score)
-        else: #expectimax
-#            v.score = 0
-            k = 1
-            mean = 0;
-            #self.rushhour.print_pretty_grid(current_state)
-            for successor in self.rushhour.possible_rock_moves(current_state):
-                if self.rushhour.possible_rock_moves(current_state)[0] == successor:
-                    v = successor
-                p = 1/len(self.rushhour.possible_moves(current_state))
-                mean = mean / len(self.rushhour.possible_moves(current_state))
-                v.score = v.score + p*self.expectimax(current_depth - 1,successor,not is_max).score
-#                print("p =",end=" ")
-#                print(p)
-#                print("v.score =",end=" ")
-#                print(v.score)
-#                print("exp =",end=" ")
-#                print(self.expectimax(current_depth - 1,successor,not is_max).score)
-#                print("max =",end=" ")
-#                print(max(v,self.expectimax(current_depth - 1,successor,not is_max)).score)
-#                print("min =",end=" ")
-#                print(min(v,self.expectimax(current_depth - 1,successor,not is_max)).score)
-                
-                
-         
+        else: # expectimax
+            if option == 0:
+            # optimiste
+                v = self.rushhour.possible_rock_moves(current_state)[0]
+                v.score = 0
+                for successor in self.rushhour.possible_rock_moves(current_state):
+                    p = 1/len(self.rushhour.possible_rock_moves(current_state))
+                    v.score = v.score + p*(self.expectimax(current_depth - 1,successor,not is_max).score)             
+            elif option == 1:
+            # pessimiste
+                v.score = -1*np.inf
+                for successor in self.rushhour.possible_rock_moves(current_state):
+                    if np.random.randint(2):
+                        v=max(v,self.expectimax(current_depth - 1,successor,not is_max))
+                    else:
+                        v= max(self.expectimax(current_depth - 1,successor,not is_max),v)
+            # alea
+            else:
+                successors = self.rushhour.possible_rock_moves(current_state)
+                random_number = random.randint(1,len(successors)-1)
+                v=self.expectimax(current_depth - 1,successors[random_number],not is_max)
+            
         best_move = v
      
         if (self.search_depth - current_depth) >= 1:
@@ -530,8 +520,10 @@ class MiniMaxSearch:
     def decide_best_move_expectimax(self, is_max):
         
         if not is_max:
+            self.search_depth = self.search_car
             self.state = self.expectimax(self.search_depth,self.state,is_max)
         else:
+            self.search_depth = self.search_rock
             all_moves = self.rushhour.possible_rock_moves(self.state)
             self.state = random.choice(all_moves) # random move
                 
@@ -637,7 +629,7 @@ algo.solve(s, True)
 
 
 #%%  NORMAL
-tableau = np.zeros((3,3))
+tableau = np.zeros((5,3))
 # Solution optimale: 9 moves
 rh = Rushhour([True, False, False, False, True],
                  [2, 3, 2, 3, 3],
@@ -723,7 +715,8 @@ nb_state = 0
 algo.solve(s, False,True) # testing pruning
 tableau[1,2] = nb_state
 
-#%% Expectimax
+#%% Expectimax Optimiste
+option = 0
 # Solution optimale: 9 moves
 rh = Rushhour([True, False, False, False, True],
                  [2, 3, 2, 3, 3],
@@ -769,7 +762,101 @@ nb_state = 0
 algo.solve(s, False,True,True) # testing expectimax
 tableau[2,2] = nb_state
 
+#%% Expectimax Pessimiste
+option = 1
+# Solution optimale: 9 moves
+rh = Rushhour([True, False, False, False, True],
+                 [2, 3, 2, 3, 3],
+                 [2, 4, 5, 1, 5],
+                 ["rouge", "vert", "bleu", "orange", "jaune"])
+s = State([1, 0, 1, 3, 2])
+algo = MiniMaxSearch(rh, s, 3)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False)
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[3,0] = nb_state
+
+
+
+# solution optimale: 16 moves
+rh = Rushhour([True, True, False, False, True, True, False, False],
+                 [2, 2, 3, 2, 3, 2, 3, 3],
+                 [2, 0, 0, 0, 5, 4, 5, 3],
+                 ["rouge", "vert", "mauve", "orange", "emeraude", "lime", "jaune", "bleu"])
+s = State([1, 0, 1, 4, 2, 4, 0, 1])
+algo = MiniMaxSearch(rh, s, 3) 
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False) 
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[3,1] = nb_state
+
+
+# solution optimale: 14 moves
+rh = Rushhour([True, False, True, False, False, False, True, True, False, True, True],
+                 [2, 2, 3, 2, 2, 3, 3, 2, 2, 2, 2],
+                 [2, 0, 0, 3, 4, 5, 3, 5, 2, 5, 4],
+                 ["rouge", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+s = State([0, 0, 3, 1, 2, 1, 0, 0, 4, 3, 4])
+algo = MiniMaxSearch(rh, s,3)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False)
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[3,2] = nb_state
+#%% Expectimax Pessimiste
+option = 2
+# Solution optimale: 9 moves
+rh = Rushhour([True, False, False, False, True],
+                 [2, 3, 2, 3, 3],
+                 [2, 4, 5, 1, 5],
+                 ["rouge", "vert", "bleu", "orange", "jaune"])
+s = State([1, 0, 1, 3, 2])
+algo = MiniMaxSearch(rh, s, 3)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False)
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[4,0] = nb_state
+
+
+
+# solution optimale: 16 moves
+rh = Rushhour([True, True, False, False, True, True, False, False],
+                 [2, 2, 3, 2, 3, 2, 3, 3],
+                 [2, 0, 0, 0, 5, 4, 5, 3],
+                 ["rouge", "vert", "mauve", "orange", "emeraude", "lime", "jaune", "bleu"])
+s = State([1, 0, 1, 4, 2, 4, 0, 1])
+algo = MiniMaxSearch(rh, s, 3) 
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False) 
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[4,1] = nb_state
+
+
+# solution optimale: 14 moves
+rh = Rushhour([True, False, True, False, False, False, True, True, False, True, True],
+                 [2, 2, 3, 2, 2, 3, 3, 2, 2, 2, 2],
+                 [2, 0, 0, 3, 4, 5, 3, 5, 2, 5, 4],
+                 ["rouge", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+s = State([0, 0, 3, 1, 2, 1, 0, 0, 4, 3, 4])
+algo = MiniMaxSearch(rh, s,3)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False)
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[4,2] = nb_state
+
 tableau = pd.DataFrame(tableau,columns = ["9 moves","16 moves","14 moves"],
-                               index = ["No Pruning","Pruning","Expectimax"])
+                               index = ["No Pruning","Pruning","Expectimax Optimiste"
+                                        ,"Expectimax Pessimiste","Expectimax Aléatoire"])
 
 
