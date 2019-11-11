@@ -725,6 +725,7 @@ tableau[1,2] = nb_state
 
 
 
+<<<<<<< Updated upstream
 #%% Expectimax
 tab = np.zeros((3,3))
 for option in range(3):
@@ -777,6 +778,146 @@ for option in range(3):
     tableau[2+option,2] = nb_state
     tab[option,2] = cpt
 #%%
+=======
+#%% Expectimax Optimiste
+option = 0
+# Solution optimale: 9 moves
+rh = Rushhour([True, False, False, False, True],
+                 [2, 3, 2, 3, 3],
+                 [2, 4, 5, 1, 5],
+                 ["rouge", "vert", "bleu", "orange", "jaune"])
+s = State([1, 0, 1, 3, 2])
+algo = MiniMaxSearch(rh, s, 3)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False)
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[2,0] = nb_state
+
+
+
+# solution optimale: 16 moves
+rh = Rushhour([True, True, False, False, True, True, False, False],
+                 [2, 2, 3, 2, 3, 2, 3, 3],
+                 [2, 0, 0, 0, 5, 4, 5, 3],
+                 ["rouge", "vert", "mauve", "orange", "emeraude", "lime", "jaune", "bleu"])
+s = State([1, 0, 1, 4, 2, 4, 0, 1])
+algo = MiniMaxSearch(rh, s, 3) 
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False) 
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[2,1] = nb_state
+
+
+# solution optimale: 14 moves
+rh = Rushhour([True, False, True, False, False, False, True, True, False, True, True],
+                 [2, 2, 3, 2, 2, 3, 3, 2, 2, 2, 2],
+                 [2, 0, 0, 3, 4, 5, 3, 5, 2, 5, 4],
+                 ["rouge", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+s = State([0, 0, 3, 1, 2, 1, 0, 0, 4, 3, 4])
+algo = MiniMaxSearch(rh, s,3)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False)
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[2,2] = nb_state
+
+#%% Expectimax Pessimiste
+option = 1
+# Solution optimale: 9 moves
+rh = Rushhour([True, False, False, False, True],
+                 [2, 3, 2, 3, 3],
+                 [2, 4, 5, 1, 5],
+                 ["rouge", "vert", "bleu", "orange", "jaune"])
+s = State([1, 0, 1, 3, 2])
+algo = MiniMaxSearch(rh, s, 3)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False)
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[3,0] = nb_state
+
+
+# solution optimale: 16 moves
+rh = Rushhour([True, True, False, False, True, True, False, False],
+                 [2, 2, 3, 2, 3, 2, 3, 3],
+                 [2, 0, 0, 0, 5, 4, 5, 3],
+                 ["rouge", "vert", "mauve", "orange", "emeraude", "lime", "jaune", "bleu"])
+s = State([1, 0, 1, 4, 2, 4, 0, 1])
+algo = MiniMaxSearch(rh, s, 3) 
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False) 
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[3,1] = nb_state
+
+
+# solution optimale: 14 moves
+rh = Rushhour([True, False, True, False, False, False, True, True, False, True, True],
+                 [2, 2, 3, 2, 2, 3, 3, 2, 2, 2, 2],
+                 [2, 0, 0, 3, 4, 5, 3, 5, 2, 5, 4],
+                 ["rouge", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+s = State([0, 0, 3, 1, 2, 1, 0, 0, 4, 3, 4])
+algo = MiniMaxSearch(rh, s,3)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False)
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[3,2] = nb_state
+#%% Expectimax Pessimiste
+option = 2
+# Solution optimale: 9 moves
+rh = Rushhour([True, False, False, False, True],
+                 [2, 3, 2, 3, 3],
+                 [2, 4, 5, 1, 5],
+                 ["rouge", "vert", "bleu", "orange", "jaune"])
+s = State([1, 0, 1, 3, 2])
+algo = MiniMaxSearch(rh, s, 3)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False)
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[4,0] = nb_state
+
+
+
+# solution optimale: 16 moves
+rh = Rushhour([True, True, False, False, True, True, False, False],
+                 [2, 2, 3, 2, 3, 2, 3, 3],
+                 [2, 0, 0, 0, 5, 4, 5, 3],
+                 ["rouge", "vert", "mauve", "orange", "emeraude", "lime", "jaune", "bleu"])
+s = State([1, 0, 1, 4, 2, 4, 0, 1])
+algo = MiniMaxSearch(rh, s, 3) 
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False) 
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[4,1] = nb_state
+
+
+# solution optimale: 14 moves
+rh = Rushhour([True, False, True, False, False, False, True, True, False, True, True],
+                 [2, 2, 3, 2, 2, 3, 3, 2, 2, 2, 2],
+                 [2, 0, 0, 3, 4, 5, 3, 5, 2, 5, 4],
+                 ["rouge", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+s = State([0, 0, 3, 1, 2, 1, 0, 0, 4, 3, 4])
+algo = MiniMaxSearch(rh, s,3)
+algo.rushhour.init_positions(s)
+print(algo.rushhour.free_pos)
+#algo.solve(s, False)
+nb_state = 0
+algo.solve(s, False,True,True) # testing expectimax
+tableau[4,2] = nb_state
+>>>>>>> Stashed changes
 
 tableau_frame2 = pd.DataFrame(tableau,columns = ["9 moves","16 moves","14 moves"],
                                index = ["No Pruning","Pruning","Expectimax Optimiste"
