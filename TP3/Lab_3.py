@@ -144,7 +144,7 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
     def _get_gradient(self,X_bias,y, probas):
         gradient = (X_bias.T @ (probas-self._one_hot(y))) / X_bias.shape[0]
         return gradient
-    
+   
 #%% 1.1
 def testOneHot():
     softmax = SoftmaxClassifier()
@@ -198,6 +198,75 @@ from sklearn.metrics import precision_recall_fscore_support
 print("train : "+ str(precision_recall_fscore_support(y_train, train_p,average = "macro")))
 print("test : "+ str(precision_recall_fscore_support(y_test, test_p,average = "macro")))
 
+#%% 2. Data preprocessing
+# SI ON CHOISI DE NE PAS TOUCHER AU DATASET, LE MENTIONNER
+# SI ON CHOISIT D'OMMETTRE UNE VARIABLE, LE MENTIONNER
+# 1ere LIGNE c'est le nom des colonnes pour la soumission sur Kagle
+def generate_missing_value_table(df):
+        value = df.isnull().sum()
+        value_percentage = 100 * df.isnull().sum() / len(df)
+        table = pd.concat([value, value_percentage], axis=1)
+        
+        # rename the original table
+        renamed_table = table.rename(columns = {0 : "missing values", 1 : "% of missing values"})
+        renamed_table = renamed_table[renamed_table.iloc[:,1] != 0].sort_values("% of missing values", ascending=False).round(1)
+        
+        return renamed_table
+#test = generate_missing_value_table(Raw_data)
+#print(generate_missing_value_table(Raw_data))
+
+PATH = "C:/Users/hatim/Documents/GitHub/INF8215---TP1/TP3/" # changer le path avec votre path
+X_train = pd.read_csv(PATH + "train.csv")
+X_test = pd.read_csv(PATH + "test.csv")
+#%% Missing values
+# Replacing all " ?" with NaN
+X_train_NaN = X_train.replace(" ",np.nan)
+X_train_NaN = X_train.replace(" ?",np.nan)
+# Finding all missing values
+missing_values_table = generate_missing_value_table(X_train_NaN)
+# Affichage
+
+#%% Changer les nan en unknown_classe
+X_train_NaN["Occupation"] = X_train_NaN["Occupation"].replace(np.nan," Unknown_occ")
+X_train_NaN["Workclass"] = X_train_NaN["Workclass"].replace(np.nan," Unknown_wc")
+X_train_NaN["Native country"] = X_train_NaN["Native country"].replace(np.nan," Unknown_nc")
+
+#%% Classifying classes
+
+# On retire l'indexe et le "Final weight", car ils sont non pertinents
+X_train_NaN.drop(["index","Final weight"], axis = 1, inplace = True)
+
+# Age
+X_train_NaN["Age"].hist(bins = 8)
+X_train_NaN["Age"][X_train_NaN["Age"]<20] = 20
+X_train_NaN["Age"][X_train_NaN["Age"]>65] = 65
+X_train_NaN["Age"] = np.digitize(X_train_NaN["Age"],np.arange(20,65,5)) - 1
+# Workclass
+a = pd.get_dummies(X_train_NaN["Workclass"])
+# We add the onehot encoding at end and remove previous class
+X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(["Workclass"],axis = 1)
+# On regarde
+b = X_train_NaN["Education"].value_counts()
+education_dict = {
+                "HS-grad" : 8,
+                "Some-college" : 12,
+                "Bachelors" : 13,
+                "Masters" : 14,
+                "Assoc-voc" : 11,
+                "11th" : 6,
+                "Assoc-acdm" : 10,
+                "10th" : 5,
+                "7th-8th" : 3,
+                "Prof-school" : 9,
+                "9th" : 4,
+                "12th" : 7,
+                "Doctorate" : 15,
+                "5th-6th" : 2,
+                "1st-4th" : 1,
+                "Preschool" : 0
+                }
+
+data = data.replace({'Weather': weather_dict})
 
 
 
