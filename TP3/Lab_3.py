@@ -232,7 +232,14 @@ X_train_NaN["Workclass"] = X_train_NaN["Workclass"].replace(np.nan," Unknown_wc"
 X_train_NaN["Native country"] = X_train_NaN["Native country"].replace(np.nan," Unknown_nc")
 
 #%% Classifying classes
-
+# On change l'income en valeurs binaires
+income_dict = {
+                " <=50K" : 0,
+                " <=50K." : 0,
+                " >50K" : 1,
+                " >50K." : 1,
+                }
+X_train_NaN = X_train_NaN.replace({"Income": income_dict})
 # On retire l'indexe et le "Final weight", car ils sont non pertinents
 X_train_NaN.drop(["index","Final weight"], axis = 1, inplace = True)
 
@@ -241,32 +248,55 @@ X_train_NaN["Age"].hist(bins = 8)
 X_train_NaN["Age"][X_train_NaN["Age"]<20] = 20
 X_train_NaN["Age"][X_train_NaN["Age"]>65] = 65
 X_train_NaN["Age"] = np.digitize(X_train_NaN["Age"],np.arange(20,65,5)) - 1
-# Workclass
-a = pd.get_dummies(X_train_NaN["Workclass"])
-# We add the onehot encoding at end and remove previous class
+X_train_NaN.groupby(['Age','Income']).size().unstack().plot(kind='bar',stacked=True)
+
+# Éducation
+pd.get_dummies(X_train_NaN["Workclass"])
+### We add the onehot encoding at end and remove previous class
 X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(["Workclass"],axis = 1)
-# On regarde
-b = X_train_NaN["Education"].value_counts()
+# On regarde le compte
+X_train_NaN["Education"].value_counts()
+X_train_NaN.groupby(['Education','Income']).size().unstack().plot(kind='bar',stacked=True)
+
+### Nous avons combinés les personnes ayant quitéé l'école prématurément et
+### les associés ensemble
 education_dict = {
-                "HS-grad" : 8,
-                "Some-college" : 12,
-                "Bachelors" : 13,
-                "Masters" : 14,
-                "Assoc-voc" : 11,
-                "11th" : 6,
-                "Assoc-acdm" : 10,
-                "10th" : 5,
-                "7th-8th" : 3,
-                "Prof-school" : 9,
-                "9th" : 4,
-                "12th" : 7,
-                "Doctorate" : 15,
-                "5th-6th" : 2,
-                "1st-4th" : 1,
-                "Preschool" : 0
+                " HS-grad" : 1,
+                " Some-college" : 4,
+                " Bachelors" : 5,
+                " Masters" : 6,
+                " Assoc-voc" : 3,
+                " 11th" : 0,
+                " Assoc-acdm" : 3,
+                " 10th" : 0,
+                " 7th-8th" : 0,
+                " Prof-school" : 2,
+                " 9th" : 0,
+                " 12th" : 0,
+                " Doctorate" : 7,
+                " 5th-6th" : 0,
+                " 1st-4th" : 0,
+                " Preschool" : 0
                 }
+#X_train_NaN = X_train_NaN.replace({'Education': education_dict})
+X_train_NaN['Education'] = X_train_NaN['Education'].map(education_dict)
+X_train_NaN.groupby(['Education','Income']).size().unstack().plot(kind='bar',stacked=True)
 
-data = data.replace({'Weather': weather_dict})
-
+# Marital-status
+X_train_NaN["Marital-status"].value_counts()
+### Séparation en : Marié=0, Jamais Marié=1, Non marié=2, Veuf=3
+marital_dict = {
+                " Married-civ-spouse" : 0,
+                " Never-married" : 1,
+                " Divorced" : 2,
+                " Separated" : 2,
+                " Widowed" : 3,
+                " Married-spouse-absent" : 0,
+                " Married-AF-spouse" : 0,
+                }
+X_train_NaN['Marital-status'] = X_train_NaN['Marital-status'].map(marital_dict)
+# Occuoation
+X_train_NaN["Occupation"].value_counts()
+X_train_NaN.groupby(['Occupation','Income']).size().unstack().plot(kind='bar',stacked=True)
 
 
