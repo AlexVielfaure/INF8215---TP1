@@ -84,7 +84,7 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
             getattr(self, "theta_")
         except AttributeError:
             raise RuntimeError("You must train classifer before predicting data!")
-#        X_bias = np.concatenate(np.ones((X.shape[0],1)), X, axis=1)
+        #X_bias = np.concatenate(np.ones((X.shape[0],1)), X, axis=1)
         z = np.dot(X,self.theta_)
         
         p = self._softmax(z)
@@ -169,7 +169,6 @@ def testOneHot():
 testOneHot()
 
 #%% 1.9
-import numpy as np
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -198,10 +197,12 @@ from sklearn.metrics import precision_recall_fscore_support
 print("train : "+ str(precision_recall_fscore_support(y_train, train_p,average = "macro")))
 print("test : "+ str(precision_recall_fscore_support(y_test, test_p,average = "macro")))
 
+
 #%% 2. Data preprocessing
 # SI ON CHOISI DE NE PAS TOUCHER AU DATASET, LE MENTIONNER
 # SI ON CHOISIT D'OMMETTRE UNE VARIABLE, LE MENTIONNER
 # 1ere LIGNE c'est le nom des colonnes pour la soumission sur Kagle
+
 def generate_missing_value_table(df):
         value = df.isnull().sum()
         value_percentage = 100 * df.isnull().sum() / len(df)
@@ -216,8 +217,9 @@ def generate_missing_value_table(df):
 #print(generate_missing_value_table(Raw_data))
 
 PATH = "C:/Users/hatim/Documents/GitHub/INF8215---TP1/TP3/" # changer le path avec votre path
-X_train = pd.read_csv(PATH + "train.csv")
-X_test = pd.read_csv(PATH + "test.csv")
+X_train = pd.read_csv("train.csv")
+X_test = pd.read_csv("test.csv")
+#y_train = X_train['Income']
 #%% Missing values
 # Replacing all " ?" with NaN
 X_train_NaN = X_train.replace(" ",np.nan)
@@ -232,6 +234,7 @@ X_train_NaN["Workclass"] = X_train_NaN["Workclass"].replace(np.nan," Unknown_wc"
 X_train_NaN["Native country"] = X_train_NaN["Native country"].replace(np.nan," Unknown_nc")
 
 #%% Classifying classes
+
 # On change l'income en valeurs binaires
 income_dict = {
                 " <=50K" : 0,
@@ -240,37 +243,40 @@ income_dict = {
                 " >50K." : 1,
                 }
 X_train_NaN = X_train_NaN.replace({"Income": income_dict})
+
+
 # On retire l'indexe et le "Final weight", car ils sont non pertinents
 X_train_NaN.drop(["index","Final weight"], axis = 1, inplace = True)
 
+
 # Age
-X_train_NaN["Age"].hist(bins = 8)
+#X_train_NaN["Age"].hist(bins = 8)
 X_train_NaN["Age"][X_train_NaN["Age"]<20] = 20
 X_train_NaN["Age"][X_train_NaN["Age"]>65] = 65
 X_train_NaN["Age"] = np.digitize(X_train_NaN["Age"],np.arange(20,65,5)) - 1
-X_train_NaN.groupby(['Age','Income']).size().unstack().plot(kind='bar',stacked=True)
+#X_train_NaN.groupby(['Age','Income']).size().unstack().plot(kind='bar',stacked=True)
+
+#Worclass
+a=pd.get_dummies(X_train_NaN["Workclass"])
+X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(["Workclass"],axis = 1)
+
 
 # Éducation
-pd.get_dummies(X_train_NaN["Workclass"])
-### We add the onehot encoding at end and remove previous class
-X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(["Workclass"],axis = 1)
-# On regarde le compte
-X_train_NaN["Education"].value_counts()
 X_train_NaN.groupby(['Education','Income']).size().unstack().plot(kind='bar',stacked=True)
 
 ### Nous avons combinés les personnes ayant quitéé l'école prématurément et
 ### les associés ensemble
 education_dict = {
                 " HS-grad" : 1,
-                " Some-college" : 4,
-                " Bachelors" : 5,
-                " Masters" : 6,
-                " Assoc-voc" : 3,
+                " Some-college" : 3,
+                " Bachelors" : 4,
+                " Masters" : 5,
+                " Assoc-voc" : 2,
                 " 11th" : 0,
-                " Assoc-acdm" : 3,
+                " Assoc-acdm" : 2,
                 " 10th" : 0,
                 " 7th-8th" : 0,
-                " Prof-school" : 2,
+                " Prof-school" : 6,
                 " 9th" : 0,
                 " 12th" : 0,
                 " Doctorate" : 7,
@@ -282,21 +288,147 @@ education_dict = {
 X_train_NaN['Education'] = X_train_NaN['Education'].map(education_dict)
 X_train_NaN.groupby(['Education','Income']).size().unstack().plot(kind='bar',stacked=True)
 
+
 # Marital-status
 X_train_NaN["Marital-status"].value_counts()
-### Séparation en : Marié=0, Jamais Marié=1, Non marié=2, Veuf=3
+X_train_NaN.groupby(['Marital-status','Income']).size().unstack().plot(kind='bar',stacked=True)
 marital_dict = {
-                " Married-civ-spouse" : 0,
-                " Never-married" : 1,
-                " Divorced" : 2,
-                " Separated" : 2,
-                " Widowed" : 3,
-                " Married-spouse-absent" : 0,
-                " Married-AF-spouse" : 0,
+                " Married-civ-spouse" : 'Married',
+                " Never-married" : 'Not Married',
+                " Divorced" : 'Not Married',
+                " Separated" : 'Not Married',
+                " Widowed" : 'Not Married',
+                " Married-spouse-absent" : 'Married',
+                " Married-AF-spouse" : 'Married',
                 }
 X_train_NaN['Marital-status'] = X_train_NaN['Marital-status'].map(marital_dict)
-# Occuoation
-X_train_NaN["Occupation"].value_counts()
-X_train_NaN.groupby(['Occupation','Income']).size().unstack().plot(kind='bar',stacked=True)
+a=pd.get_dummies(X_train_NaN['Marital-status'])
+X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(['Marital-status'],axis = 1)
 
+
+# Occupation
+X_train_NaN.groupby(['Occupation','Income']).size().unstack().plot(kind='bar',stacked=True)
+a=pd.get_dummies(X_train_NaN['Occupation'])
+X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(['Occupation'],axis = 1)
+
+
+# Relationship
+X_train_NaN.groupby(['Relationship','Income']).size().unstack().plot(kind='bar',stacked=True)
+a=pd.get_dummies(X_train_NaN['Relationship'])
+X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(['Relationship'],axis = 1)
+
+
+# Sex
+X_train_NaN.groupby(['Sex','Income']).size().unstack().plot(kind='bar',stacked=True)
+education_dict = {
+                " Male" : 1,
+                " Female" : 0,
+                }
+X_train_NaN['Sex'] = X_train_NaN['Sex'].map(education_dict)
+
+#Capital gain/loss
+X_train_NaN.groupby(['Capital-gain','Income']).size().unstack().plot(kind='bar',stacked=True)
+X_train_NaN['Capital-gain'][X_train_NaN['Capital-gain'] < 5100] = 0
+X_train_NaN['Capital-gain'][X_train_NaN['Capital-gain'] >= 5100] = 1
+X_train_NaN.groupby(['Capital-loss','Income']).size().unstack().plot(kind='bar',stacked=True)
+X_train_NaN['Capital-loss'][X_train_NaN['Capital-loss'] > 0] = -1
+X_train_NaN['Capital-loss'] += 1
+
+#Hours
+X_train_NaN["Hours per week"].hist(bins = 15)
+X_train_NaN["Hours per week"][X_train_NaN["Hours per week"] < 35] = 0
+X_train_NaN['Hours per week'][(X_train_NaN['Hours per week'] < 45) & (X_train_NaN['Hours per week'] >= 35)] = 1
+X_train_NaN['Hours per week'][X_train_NaN['Hours per week'] >= 45] = 2
+
+#Country
+X_train_NaN.groupby(['Native country','Income']).size().unstack().plot(kind='bar',stacked=True)
+country_dict = {
+ ' United-States':'N_america',
+ ' Mexico':'S_america'     ,                 
+ ' Philippines':'Asia',
+ ' Germany':'Europe',
+ ' Puerto-Rico':'S_america',
+ ' Canada':'N_america',
+ ' India':'Asia',
+ ' Cuba':'S_america',
+ ' El-Salvador':'S_america',
+ ' China':'Asia',                
+ ' South':'S_america',                  
+ ' Italy':'Europe',                     
+ ' England':'Europe',
+ ' Jamaica':'S_america', 
+ ' Dominican-Republic':'S_america',
+ ' Guatemala':'S_america', 
+ ' Japan'  : 'Asia',                            
+ ' Columbia' : 'S_america',                         
+ ' Vietnam' : 'Asia',
+ ' Poland' : 'Europe',
+ ' Portugal' : 'Europe',
+ ' Haiti' : 'S_america',
+ ' Taiwan' : 'Asia',
+ ' Greece' : 'Europe',
+ ' Iran' : 'Asia',
+ ' Nicaragua' : 'S_america',
+ ' Peru' : 'S_america',
+ ' Ireland': 'Europe',
+ ' Ecuador' : 'S_america',
+ ' Thailand' : 'Asia',
+ ' France' : 'Europe',
+ ' Cambodia' : 'Asia',
+ ' Hong': 'Asia',
+ ' Hungary' : 'Europe',
+ ' Trinadad&Tobago' : 'Africa',
+ ' Yugoslavia' : 'Europe',
+ ' Laos' : 'Asia',
+ ' Scotland' : 'Europe',                         
+ ' Outlying-US(Guam-USVI-etc)': 'S_america',
+ ' Honduras' : 'S_america',
+                }
+X_train_NaN['Native country'] = X_train_NaN['Native country'].map(country_dict)
+a=pd.get_dummies(X_train_NaN['Native country'])
+X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(['Native country'],axis = 1)
+
+
+#%% Normalisation 
+
+X_train = X_train_NaN / X_train_NaN.max()
+
+
+#%% PCA
+
+
+
+#%% 
+from sklearn.preprocessing import LabelEncoder
+y_train = X_train_NaN['Income']
+target_label = LabelEncoder()
+y_train_label = target_label.fit_transform(y_train)
+print(target_label.classes_)
+
+#%% Cross_validation
+from sklearn.model_selection import cross_validate
+def compare(models,X_train,y_train,nb_runs,scoring):
+    
+    scores = []
+    for i in models:
+        scores.append(cross_validate(i, X_train, y_train, cv=nb_runs, scoring = scoring))
+    
+    return scores
+
+#%%
+    
+X_train_preprocess = np.array(X_train.drop('Income',axis=1))
+
+nb_run = 3
+
+models = [
+    SoftmaxClassifier(), # le modele que vous avez implémenté plus haut
+]
+
+scoring = ['neg_log_loss', 'precision_macro','recall_macro','f1_macro']
+
+compare(models,X_train_preprocess,y_train_label,nb_run,scoring[3])
+
+
+#%%
 
