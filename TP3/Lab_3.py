@@ -25,8 +25,6 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         self.threshold = threshold
         self.early_stopping = early_stopping
         
-
-
     """
         In:
         X : l'ensemble d'exemple de taille nb_example x nb_features
@@ -249,7 +247,12 @@ X_train_NaN = X_train_NaN.replace({"Income": income_dict})
 # On retire l'indexe et le "Final weight", car ils sont non pertinents
 X_train_NaN.drop(["index","Final weight"], axis = 1, inplace = True)
 
+
 # Age
+t1 = pd.DataFrame(X_train_NaN.groupby(['Age','Income']).size().unstack())/pd.DataFrame(X_train_NaN.groupby(['Age','Income']).size().unstack().sum(axis=1))
+t1[1] = 1-t1[0]
+t1.plot(kind='bar',stacked=True,title = 'Graphe du salaire en fonction du niveau de l age')
+
 X_train_NaN["Age"][X_train_NaN["Age"]<20] = 20
 X_train_NaN["Age"][X_train_NaN["Age"]>65] = 65
 X_train_NaN["Age"] = np.digitize(X_train_NaN["Age"],np.arange(20,65,5)) - 1
@@ -326,6 +329,11 @@ X_train_NaN['Capital-loss'][X_train_NaN['Capital-loss'] > 0] = -1
 X_train_NaN['Capital-loss'] += 1
 
 #Hours
+#t1 = pd.DataFrame(X_train_NaN.groupby(['Hours per week','Income']).size().unstack())/pd.DataFrame(X_train_NaN.groupby(['Hours per week','Income']).size().unstack().sum(axis=1))
+#t1[1] = 1-t1[0]
+#t1.plot(kind='bar',stacked=True,title = 'Graphe du salaire en fonction du niveau de heure')
+
+
 X_train_NaN["Hours per week"][X_train_NaN["Hours per week"] < 35] = 0
 X_train_NaN['Hours per week'][(X_train_NaN['Hours per week'] < 45) & (X_train_NaN['Hours per week'] >= 35)] = 1
 X_train_NaN['Hours per week'][X_train_NaN['Hours per week'] >= 45] = 2
