@@ -55,8 +55,8 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         self.nb_feature = X.shape[1]
         self.nb_classes = np.max(y) + 1
 
-        print(np.ones((X.shape[0],1)).shape)
-        print(X.shape)
+        #print(np.ones((X.shape[0],1)).shape)
+        #print(X.shape)
         X_bias = np.concatenate([np.ones((X.shape[0],1)), X], axis=1)   
         
         self.theta_  = np.random.rand(self.nb_feature + 1, self.nb_classes)
@@ -221,12 +221,14 @@ X_train = pd.read_csv("train.csv")
 X_test = pd.read_csv("test.csv")
 #y_train = X_train['Income']
 #%% Missing values
+
 # Replacing all " ?" with NaN
 X_train_NaN = X_train.replace(" ",np.nan)
 X_train_NaN = X_train.replace(" ?",np.nan)
 # Finding all missing values
 missing_values_table = generate_missing_value_table(X_train_NaN)
 # Affichage
+#display(missing_values_table)
 
 #%% Changer les nan en unknown_classe
 X_train_NaN["Occupation"] = X_train_NaN["Occupation"].replace(np.nan," Unknown_occ")
@@ -234,7 +236,7 @@ X_train_NaN["Workclass"] = X_train_NaN["Workclass"].replace(np.nan," Unknown_wc"
 X_train_NaN["Native country"] = X_train_NaN["Native country"].replace(np.nan," Unknown_nc")
 
 #%% Classifying classes
-
+pd.options.mode.chained_assignment = None
 # On change l'income en valeurs binaires
 income_dict = {
                 " <=50K" : 0,
@@ -244,28 +246,21 @@ income_dict = {
                 }
 X_train_NaN = X_train_NaN.replace({"Income": income_dict})
 
-
 # On retire l'indexe et le "Final weight", car ils sont non pertinents
 X_train_NaN.drop(["index","Final weight"], axis = 1, inplace = True)
 
-
 # Age
-#X_train_NaN["Age"].hist(bins = 8)
 X_train_NaN["Age"][X_train_NaN["Age"]<20] = 20
 X_train_NaN["Age"][X_train_NaN["Age"]>65] = 65
 X_train_NaN["Age"] = np.digitize(X_train_NaN["Age"],np.arange(20,65,5)) - 1
-#X_train_NaN.groupby(['Age','Income']).size().unstack().plot(kind='bar',stacked=True)
 
 #Worclass
 a=pd.get_dummies(X_train_NaN["Workclass"])
 X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(["Workclass"],axis = 1)
 
-
 # Éducation
-X_train_NaN.groupby(['Education','Income']).size().unstack().plot(kind='bar',stacked=True)
+X_train_NaN.groupby(['Education','Income']).size().unstack().plot(kind='bar',stacked=True,title = 'Graphe du salaire en fonction du niveau d''éducation')
 
-### Nous avons combinés les personnes ayant quitéé l'école prématurément et
-### les associés ensemble
 education_dict = {
                 " HS-grad" : 1,
                 " Some-college" : 3,
@@ -284,14 +279,11 @@ education_dict = {
                 " 1st-4th" : 0,
                 " Preschool" : 0
                 }
-#X_train_NaN = X_train_NaN.replace({'Education': education_dict})
 X_train_NaN['Education'] = X_train_NaN['Education'].map(education_dict)
-X_train_NaN.groupby(['Education','Income']).size().unstack().plot(kind='bar',stacked=True)
-
 
 # Marital-status
 X_train_NaN["Marital-status"].value_counts()
-X_train_NaN.groupby(['Marital-status','Income']).size().unstack().plot(kind='bar',stacked=True)
+X_train_NaN.groupby(['Marital-status','Income']).size().unstack().plot(kind='bar',stacked=True,title='Graphe du salaire en fonction du niveau du statut marital')
 marital_dict = {
                 " Married-civ-spouse" : 'Married',
                 " Never-married" : 'Not Married',
@@ -307,41 +299,38 @@ X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(['Marital-status'],axis =
 
 
 # Occupation
-X_train_NaN.groupby(['Occupation','Income']).size().unstack().plot(kind='bar',stacked=True)
+X_train_NaN.groupby(['Occupation','Income']).size().unstack().plot(kind='bar',stacked=True,title='Graphe du salaire en fonction du niveau de l''occupation')
 a=pd.get_dummies(X_train_NaN['Occupation'])
 X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(['Occupation'],axis = 1)
 
 
 # Relationship
-X_train_NaN.groupby(['Relationship','Income']).size().unstack().plot(kind='bar',stacked=True)
+X_train_NaN.groupby(['Relationship','Income']).size().unstack().plot(kind='bar',stacked=True,title='Graphe du salaire en fonction de la relation')
 a=pd.get_dummies(X_train_NaN['Relationship'])
 X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(['Relationship'],axis = 1)
 
 
 # Sex
-X_train_NaN.groupby(['Sex','Income']).size().unstack().plot(kind='bar',stacked=True)
+X_train_NaN.groupby(['Sex','Income']).size().unstack().plot(kind='bar',stacked=True,title='Graphe du salaire en fonction du sexe')
 education_dict = {
                 " Male" : 1,
                 " Female" : 0,
                 }
 X_train_NaN['Sex'] = X_train_NaN['Sex'].map(education_dict)
 
+
 #Capital gain/loss
-X_train_NaN.groupby(['Capital-gain','Income']).size().unstack().plot(kind='bar',stacked=True)
 X_train_NaN['Capital-gain'][X_train_NaN['Capital-gain'] < 5100] = 0
 X_train_NaN['Capital-gain'][X_train_NaN['Capital-gain'] >= 5100] = 1
-X_train_NaN.groupby(['Capital-loss','Income']).size().unstack().plot(kind='bar',stacked=True)
 X_train_NaN['Capital-loss'][X_train_NaN['Capital-loss'] > 0] = -1
 X_train_NaN['Capital-loss'] += 1
 
 #Hours
-X_train_NaN["Hours per week"].hist(bins = 15)
 X_train_NaN["Hours per week"][X_train_NaN["Hours per week"] < 35] = 0
 X_train_NaN['Hours per week'][(X_train_NaN['Hours per week'] < 45) & (X_train_NaN['Hours per week'] >= 35)] = 1
 X_train_NaN['Hours per week'][X_train_NaN['Hours per week'] >= 45] = 2
 
 #Country
-X_train_NaN.groupby(['Native country','Income']).size().unstack().plot(kind='bar',stacked=True)
 country_dict = {
  ' United-States':'N_america',
  ' Mexico':'S_america'     ,                 
@@ -393,14 +382,21 @@ X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(['Native country'],axis =
 
 X_train = X_train_NaN / X_train_NaN.max()
 
-
 #%% PCA
 
-
+#from sklearn.decomposition import PCA
+#
+#pca = PCA(n_components=20)
+#pca.fit(X_train)
+#print(pca.explained_variance_ratio_)
+#
+#X_train2 = pca.fit_transform(X_train)
+#
 
 #%% 
 from sklearn.preprocessing import LabelEncoder
 y_train = X_train_NaN['Income']
+X_train = X_train.drop('Income',axis=1)
 target_label = LabelEncoder()
 y_train_label = target_label.fit_transform(y_train)
 print(target_label.classes_)
@@ -412,23 +408,53 @@ def compare(models,X_train,y_train,nb_runs,scoring):
     scores = []
     for i in models:
         scores.append(cross_validate(i, X_train, y_train, cv=nb_runs, scoring = scoring))
-    
+        
     return scores
 
 #%%
-    
-X_train_preprocess = np.array(X_train.drop('Income',axis=1))
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+
+X_train_preprocess = np.array(X_train)
 
 nb_run = 3
 
 models = [
-    SoftmaxClassifier(), # le modele que vous avez implémenté plus haut
+    SoftmaxClassifier(),
+    RandomForestClassifier(),
+    GradientBoostingClassifier(),
 ]
 
 scoring = ['neg_log_loss', 'precision_macro','recall_macro','f1_macro']
 
-compare(models,X_train_preprocess,y_train_label,nb_run,scoring[3])
+score = compare(models,X_train_preprocess,y_train_label,nb_run,scoring[3])
+
+Score_dataframe = np.zeros((2,2))
+for i in range(len(score)):
+    Score_dataframe[i,0] = score[1]['test_score'].mean()
+    Score_dataframe[i,1] = score[1]['test_score'].std()
+
+Score_dataframe = pd.DataFrame(Score_dataframe)
+Score_dataframe.columns = ['Moyenne','STD']
+Score_dataframe.index = ['SoftmaxClassifier','RandomForest','GradientBoosting']
 
 
-#%%
+#%% Single Model testing
+
+X_train_preprocess = np.array(X_train)
+
+model_test = RandomForestClassifier()
+
+test = cross_validate(model_test, X_train_preprocess, y_train, cv=2, scoring = 'f1_macro')
+
+
+#%% Kaggle 
+
+# best_model_1 = 
+# pred_test = pd.Series(best_model_1.transform(X_test_preprocess))
+# pred_test.to_csv("test_prediction_1.csv",index = False)
+#
+# best_model_2 = 
+# pred_test = pd.Series(best_model_2.transform(X_test_preprocess))
+# pred_test.to_csv("test_prediction_2.csv",index = False)
 
