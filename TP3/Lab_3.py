@@ -222,7 +222,7 @@ X_test = pd.read_csv("test.csv")
 
 # Replacing all " ?" with NaN
 X_train_NaN = X_train.replace(" ",np.nan)
-X_train_NaN = X_train.replace(" ?",np.nan)
+X_train_NaN = X_train_NaN.replace(" ?",np.nan)
 # Finding all missing values
 missing_values_table = generate_missing_value_table(X_train_NaN)
 # Affichage
@@ -253,9 +253,8 @@ t1 = pd.DataFrame(X_train_NaN.groupby(['Age','Income']).size().unstack())/pd.Dat
 t1[1] = 1-t1[0]
 t1.plot(kind='bar',stacked=True,title = 'Graphe du salaire en fonction du niveau de l age')
 
-X_train_NaN["Age"][X_train_NaN["Age"]<20] = 20
-X_train_NaN["Age"][X_train_NaN["Age"]>65] = 65
-X_train_NaN["Age"] = np.digitize(X_train_NaN["Age"],np.arange(20,65,5)) - 1
+X_train_NaN["Age"][X_train_NaN["Age"] <= 50] = (X_train_NaN["Age"][X_train_NaN["Age"] <= 50] - 17)/33
+X_train_NaN["Age"][X_train_NaN["Age"] >= 51] = ((X_train_NaN["Age"][X_train_NaN["Age"] >= 51] - 90) * -1)/39
 
 #Worclass
 a=pd.get_dummies(X_train_NaN["Workclass"])
@@ -384,22 +383,144 @@ country_dict = {
 X_train_NaN['Native country'] = X_train_NaN['Native country'].map(country_dict)
 a=pd.get_dummies(X_train_NaN['Native country'])
 X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(['Native country'],axis = 1)
+#%% Preprocesing X_test
+# Replacing all " ?" with NaN
+X_test_NaN = X_test.replace(" ",np.nan)
+X_test_NaN = X_test_NaN.replace(" ?",np.nan)
+# Changer les nan en unknown_classe
+X_test_NaN["Occupation"] = X_test_NaN["Occupation"].replace(np.nan," Unknown_occ")
+X_test_NaN["Workclass"] = X_test_NaN["Workclass"].replace(np.nan," Unknown_wc")
+X_test_NaN["Native country"] = X_test_NaN["Native country"].replace(np.nan," Unknown_nc")
+# Classifying classes
+pd.options.mode.chained_assignment = None
+# On retire l'indexe et le "Final weight", car ils sont non pertinents
+X_test_NaN.drop(["index","Final weight"], axis = 1, inplace = True)
+# Age
+print(max(X_test_NaN["Age"]))
+X_test_NaN["Age"][X_test_NaN["Age"] <= 50] = (X_test_NaN["Age"][X_test_NaN["Age"] <= 50] - 17)/33
 
+X_test_NaN["Age"][X_test_NaN["Age"] >= 51] = ((X_test_NaN["Age"][X_test_NaN["Age"] >= 51] - 90) * -1)/39
+#Worclass
+a=pd.get_dummies(X_test_NaN["Workclass"])
+X_test_NaN = pd.concat([X_test_NaN,a],axis = 1).drop(["Workclass"],axis = 1)
+# Éducation
+education_dict = {
+                " HS-grad" : 1,
+                " Some-college" : 3,
+                " Bachelors" : 4,
+                " Masters" : 5,
+                " Assoc-voc" : 2,
+                " 11th" : 0,
+                " Assoc-acdm" : 2,
+                " 10th" : 0,
+                " 7th-8th" : 0,
+                " Prof-school" : 6,
+                " 9th" : 0,
+                " 12th" : 0,
+                " Doctorate" : 7,
+                " 5th-6th" : 0,
+                " 1st-4th" : 0,
+                " Preschool" : 0
+                }
+X_test_NaN['Education'] = X_test_NaN['Education'].map(education_dict)
+# Marital-status
+X_test_NaN["Marital-status"].value_counts()
+marital_dict = {
+                " Married-civ-spouse" : 'Married',
+                " Never-married" : 'Not Married',
+                " Divorced" : 'Not Married',
+                " Separated" : 'Not Married',
+                " Widowed" : 'Not Married',
+                " Married-spouse-absent" : 'Married',
+                " Married-AF-spouse" : 'Married',
+                }
+X_test_NaN['Marital-status'] = X_test_NaN['Marital-status'].map(marital_dict)
+a=pd.get_dummies(X_test_NaN['Marital-status'])
+X_test_NaN = pd.concat([X_test_NaN,a],axis = 1).drop(['Marital-status'],axis = 1)
+# Occupation
+a=pd.get_dummies(X_test_NaN['Occupation'])
+X_test_NaN = pd.concat([X_test_NaN,a],axis = 1).drop(['Occupation'],axis = 1)
+# Relationship
+a=pd.get_dummies(X_test_NaN['Relationship'])
+X_test_NaN = pd.concat([X_test_NaN,a],axis = 1).drop(['Relationship'],axis = 1)
+# Sex
+education_dict = {
+                " Male" : 1,
+                " Female" : 0,
+                }
+X_test_NaN['Sex'] = X_test_NaN['Sex'].map(education_dict)
+
+#Capital gain/loss
+X_test_NaN['Capital-gain'][X_test_NaN['Capital-gain'] < 5100] = 0
+X_test_NaN['Capital-gain'][X_test_NaN['Capital-gain'] >= 5100] = 1
+X_test_NaN['Capital-loss'][X_test_NaN['Capital-loss'] > 0] = -1
+X_test_NaN['Capital-loss'] += 1
+#Hours
+X_test_NaN["Hours per week"][X_test_NaN["Hours per week"] < 35] = 0
+X_test_NaN['Hours per week'][(X_test_NaN['Hours per week'] < 45) & (X_test_NaN['Hours per week'] >= 35)] = 1
+X_test_NaN['Hours per week'][X_test_NaN['Hours per week'] >= 45] = 2
+#Country
+country_dict = {
+ ' United-States':'N_america',
+ ' Mexico':'S_america'     ,                 
+ ' Philippines':'Asia',
+ ' Germany':'Europe',
+ ' Puerto-Rico':'S_america',
+ ' Canada':'N_america',
+ ' India':'Asia',
+ ' Cuba':'S_america',
+ ' El-Salvador':'S_america',
+ ' China':'Asia',                
+ ' South':'S_america',                  
+ ' Italy':'Europe',                     
+ ' England':'Europe',
+ ' Jamaica':'S_america', 
+ ' Dominican-Republic':'S_america',
+ ' Guatemala':'S_america', 
+ ' Japan'  : 'Asia',                            
+ ' Columbia' : 'S_america',                         
+ ' Vietnam' : 'Asia',
+ ' Poland' : 'Europe',
+ ' Portugal' : 'Europe',
+ ' Haiti' : 'S_america',
+ ' Taiwan' : 'Asia',
+ ' Greece' : 'Europe',
+ ' Iran' : 'Asia',
+ ' Nicaragua' : 'S_america',
+ ' Peru' : 'S_america',
+ ' Ireland': 'Europe',
+ ' Ecuador' : 'S_america',
+ ' Thailand' : 'Asia',
+ ' France' : 'Europe',
+ ' Cambodia' : 'Asia',
+ ' Hong': 'Asia',
+ ' Hungary' : 'Europe',
+ ' Trinadad&Tobago' : 'Africa',
+ ' Yugoslavia' : 'Europe',
+ ' Laos' : 'Asia',
+ ' Scotland' : 'Europe',                         
+ ' Outlying-US(Guam-USVI-etc)': 'S_america',
+ ' Honduras' : 'S_america',
+                }
+X_test_NaN['Native country'] = X_test_NaN['Native country'].map(country_dict)
+a=pd.get_dummies(X_test_NaN['Native country'])
+X_test_NaN = pd.concat([X_test_NaN,a],axis = 1).drop(['Native country'],axis = 1)
+#%% Dropping 
+X_train_NaN = X_train_NaN.drop(' Never-worked',axis=1) # Pour le test
 
 #%% Normalisation 
-
 X_train = X_train_NaN / X_train_NaN.max()
+X_test = X_test_NaN / X_test_NaN.max()
 
 #%% PCA
 
-#from sklearn.decomposition import PCA
-#
-#pca = PCA(n_components=20)
-#pca.fit(X_train)
-#print(pca.explained_variance_ratio_)
-#
-#X_train2 = pca.fit_transform(X_train)
-#
+from sklearn.decomposition import PCA
+
+pca = PCA(n_components=20)
+pca.fit(X_train)
+print(pca.explained_variance_ratio_)
+
+X_train2 = pca.fit_transform(X_train)
 
 #%% 
 from sklearn.preprocessing import LabelEncoder
@@ -437,8 +558,9 @@ scoring = ['neg_log_loss', 'precision_macro','recall_macro','f1_macro']
 
 score = compare(models,X_train_preprocess,y_train_label,nb_run,scoring[3])
 
-Score_dataframe = np.zeros((2,2))
+Score_dataframe = np.zeros((3,2)) # J'ai changé (2,2) pour (3,2)
 for i in range(len(score)):
+    print(i)
     Score_dataframe[i,0] = score[1]['test_score'].mean()
     Score_dataframe[i,1] = score[1]['test_score'].std()
 
@@ -450,19 +572,15 @@ Score_dataframe.index = ['SoftmaxClassifier','RandomForest','GradientBoosting']
 #%% Single Model testing
 
 X_train_preprocess = np.array(X_train)
-
-model_test = RandomForestClassifier()
-
+model_test = GradientBoostingClassifier()
 test = cross_validate(model_test, X_train_preprocess, y_train, cv=2, scoring = 'f1_macro')
 
+#%% Soumission Kaggle
 
-#%% Kaggle 
-
-# best_model_1 = 
-# pred_test = pd.Series(best_model_1.transform(X_test_preprocess))
-# pred_test.to_csv("test_prediction_1.csv",index = False)
-#
-# best_model_2 = 
-# pred_test = pd.Series(best_model_2.transform(X_test_preprocess))
-# pred_test.to_csv("test_prediction_2.csv",index = False)
-
+best_model_1 = GradientBoostingClassifier()
+best_model_1.fit(X_train_preprocess,y_train)
+pred_test = pd.Series(best_model_1.predict(X_test))
+test2 = cross_validate(best_model_1, X_test, pred_test, cv=2, scoring = 'f1_macro')
+pred_test[pred_test==0] = "<=50K"
+pred_test[pred_test==1] = ">50K"
+pred_test.to_csv("test_prediction_raw.csv",index = False)
