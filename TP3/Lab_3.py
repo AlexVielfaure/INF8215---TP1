@@ -253,8 +253,15 @@ t1 = pd.DataFrame(X_train_NaN.groupby(['Age','Income']).size().unstack())/pd.Dat
 t1[1] = 1-t1[0]
 t1.plot(kind='bar',stacked=True,title = 'Graphe du salaire en fonction du niveau de l age')
 
+#<<<<<<< Updated upstream
 X_train_NaN["Age"][X_train_NaN["Age"] <= 50] = (X_train_NaN["Age"][X_train_NaN["Age"] <= 50] - 17)/33
 X_train_NaN["Age"][X_train_NaN["Age"] >= 51] = ((X_train_NaN["Age"][X_train_NaN["Age"] >= 51] - 90) * -1)/39
+#=======
+
+#X_train_NaN["Age"][X_train_NaN["Age"]<20] = 20
+#X_train_NaN["Age"][X_train_NaN["Age"]>65] = 65
+#X_train_NaN["Age"] = np.digitize(X_train_NaN["Age"],np.arange(20,65,5)) - 1
+#>>>>>>> Stashed changes
 
 #Worclass
 a=pd.get_dummies(X_train_NaN["Workclass"])
@@ -282,6 +289,11 @@ education_dict = {
                 " Preschool" : 0
                 }
 X_train_NaN['Education'] = X_train_NaN['Education'].map(education_dict)
+
+t1 = pd.DataFrame(X_train_NaN.groupby(['Education','Income']).size().unstack())/pd.DataFrame(X_train_NaN.groupby(['Education','Income']).size().unstack().sum(axis=1))
+t1[1] = 1-t1[0]
+t1.plot(kind='bar',stacked=True,title = 'Graphe du salaire en fonction du niveau de l age')
+
 
 # Marital-status
 X_train_NaN["Marital-status"].value_counts()
@@ -383,6 +395,7 @@ country_dict = {
 X_train_NaN['Native country'] = X_train_NaN['Native country'].map(country_dict)
 a=pd.get_dummies(X_train_NaN['Native country'])
 X_train_NaN = pd.concat([X_train_NaN,a],axis = 1).drop(['Native country'],axis = 1)
+
 #%% Preprocesing X_test
 # Replacing all " ?" with NaN
 X_test_NaN = X_test.replace(" ",np.nan)
@@ -511,16 +524,6 @@ X_train_NaN = X_train_NaN.drop(' Never-worked',axis=1) # Pour le test
 #%% Normalisation 
 X_train = X_train_NaN / X_train_NaN.max()
 X_test = X_test_NaN / X_test_NaN.max()
-
-#%% PCA
-
-from sklearn.decomposition import PCA
-
-pca = PCA(n_components=20)
-pca.fit(X_train)
-print(pca.explained_variance_ratio_)
-
-X_train2 = pca.fit_transform(X_train)
 
 #%% 
 from sklearn.preprocessing import LabelEncoder
