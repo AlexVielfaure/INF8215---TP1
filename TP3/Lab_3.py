@@ -545,7 +545,15 @@ def compare(models,X_train,y_train,nb_runs,scoring):
 
 #%%
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.datasets import make_hastie_10_2
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.experimental import enable_hist_gradient_boosting  # noqa
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import BaggingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.tree import DecisionTreeClassifier
 
 X_train_preprocess = np.array(X_train)
 
@@ -580,10 +588,10 @@ test = cross_validate(model_test, X_train_preprocess, y_train, cv=2, scoring = '
 
 #%% Soumission Kaggle
 
-best_model_1 = GradientBoostingClassifier()
+best_model_1 = GradientBoostingClassifier(n_estimators=200, learning_rate=1, max_depth=1, random_state=0)
 best_model_1.fit(X_train_preprocess,y_train)
 pred_test = pd.Series(best_model_1.predict(X_test))
 test2 = cross_validate(best_model_1, X_test, pred_test, cv=2, scoring = 'f1_macro')
 pred_test[pred_test==0] = "<=50K"
 pred_test[pred_test==1] = ">50K"
-pred_test.to_csv("test_prediction_raw.csv",index = False)
+#pred_test.to_csv("test_prediction_raw10.csv",index = False)
